@@ -1,37 +1,54 @@
 #!/usr/bin/env python
 import copy
 import sys
-
+import numpy as np
 import matplotlib.pyplot as plt
 """
-This script receives blocks of data in the form (x1,x2,x3!x4...,xn) (x1,x2,x3!x4...,xn) 
+main takes paths to files to plot as arguments
 """
 def main():
 
     rawData = copy.deepcopy(sys.argv[1:]) #The 0th argument is the script path, so we ignore it
+
     processedData = []
     for x in rawData:
         processedData.append(parse_data(x))
 
-    points = ['b.', 'g.', 'r.', 'y.', 'c.', 'm.', 'b.', 'g.', 'r.', 'y.', 'c.', 'm.',]
+    fileDictionary = load_files(rawData)
+
+    points = ['bo', 'go', 'ro', 'yo', 'co', 'mo', 'bo', 'go', 'ro', 'yo', 'co', 'mo']
     fig, axes = plt.subplots(2, 4)
-    for y in range(0, 8): # len(processedData)):
+
+    for y, file in enumerate(fileDictionary):
         if y >= 4:
             indX, indY = 1, y-4
         else:
             indX, indY = 0, y
-        for x in processedData[y]:
-            axes[indX, indY].plot(x[0], x[2], points[y])
-            axes[indX, indY].set_xlabel('Energy (eV)')
-            axes[indX, indY].set_ylabel('XRay Counts')
-    # for row in axes:
-    #    for column in row:
-    #         column.title.set_text()
+        data = fileDictionary.get(file)
+        axes[indX, indY].plot(data[:, 0], data[:, 8], points[y], markersize=1)
+        axes[indX, indY].set_xlabel('Energy (eV)')
+        axes[indX, indY].set_ylabel('XRay Counts')
+        #axes[indX, indY].title.set_text()
 
-    fig.tight_layout()#prevents subplots from overlapping
+    fig.tight_layout() #prevents subplots from overlapping
     fig.set_size_inches(14, 7)
     plt.show()
 
+
+def load_files(filePathList):
+    fileDictionary = {}
+    for path in filePathList: # Iterate through files in a directory
+        file = open(path, "r")
+        fileData = []
+        for line in file: # Iterate through lines in a file
+            if (line[0].isnumeric()): # Only data containing lines start with a number
+                data = line[:-1].split() # Final two characters are new line
+                dataVector = list(map(float, data)) # Convert strings to floats and store in list
+                fileData.append(dataVector)
+        npFileData = np.array(fileData)
+        fileDictionary[file.buffer.name] = npFileData
+        file.close()
+    return fileDictionary
 
 """
 This processes one script argument, corresponding to one file of data. It returns the data as a list of tuples

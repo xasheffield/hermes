@@ -20,11 +20,16 @@ import java.util.Scanner;
 
 public class FileInput {
 
-    //
+    //Connect each individual data file with the data it contains
     static HashMap<File, LinkedList<XRaySample>> noSampleMap;
     static HashMap<File, LinkedList<XRaySample>> sampleMap;
     static HashMap<File, LinkedList<XRaySample>> noSampleBgMap;
     static HashMap<File, LinkedList<XRaySample>> sampleBgMap;
+    //Directories containing the 4 types of measurement data
+    static File noSampleDir;
+    static File sampleDataDir;
+    static File noSampleBackgroundDir;
+    static File sampleBackgroundDir;
 
     /**
      * Static initialiser to load data from files
@@ -36,15 +41,15 @@ public class FileInput {
         File mainDataFolder = new File(dataPath);
 
         //Directories for each type of data file
-        File noSampleData = new File(dataPath + "/I0");
-        File sampleData = new File(dataPath + "/It");
-        File noSampleBackground = new File(dataPath + "/I0b");
-        File sampleBackground = new File(dataPath + "/Itb");
+        noSampleDir = new File(dataPath + "/I0");
+        sampleDataDir = new File(dataPath + "/It");
+        noSampleBackgroundDir = new File(dataPath + "/I0b");
+        sampleBackgroundDir = new File(dataPath + "/Itb");
 
-        noSampleMap = processDataFile(noSampleData);
-        sampleMap = processDataFile(sampleData);
-        noSampleBgMap = processDataFile(noSampleBackground);
-        sampleBgMap = processDataFile(sampleBackground);
+        noSampleMap = processDataFile(noSampleDir);
+        sampleMap = processDataFile(sampleDataDir);
+        noSampleBgMap = processDataFile(noSampleBackgroundDir);
+        sampleBgMap = processDataFile(sampleBackgroundDir);
     }
 
     /**

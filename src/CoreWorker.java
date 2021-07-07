@@ -6,16 +6,21 @@ import java.util.*;
 
 public class CoreWorker {
 
-    //static String pythonCommand = "python3 /Users/Marco/IdeaProjects/XRayData/src/Python/PlotData.py";
     static final String pythonVersion = "python3";
-    //static String scriptPath = "/Users/Marco/IdeaProjects/XRayData/src/Python/PlotData.py";
+    static String basePath = System.getProperty("user.dir");
+    static boolean isWindows = isWindows();
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        String scriptPath = System.getProperty("user.dir");
-        scriptPath += "/Python/PlotData.py";
-        //scriptPath += "/src/Python/PlotData.py";
+        GUI gui = new GUI("XRay Plotter");
+
+
+        String scriptPath = basePath + "/Python/PlotData.py";
+        scriptPath = formatForOS(scriptPath);
 
         FileInput files = new FileInput(); //Read and process data from files
+        ArrayList<String> command = new ArrayList<>(); //command line arguments for running script
+        command.add(pythonVersion);
+        command.add(scriptPath);
 
         HashMap<File, LinkedList> map;
         if (args.length == 0) {
@@ -24,6 +29,7 @@ public class CoreWorker {
             map = processArgs(args, files);
         }
 
+        /*
         ArrayList<LinkedList> allFiles = new ArrayList<>();
         LinkedList<XRaySample> samples = new LinkedList<>();
         for (Map.Entry<File, LinkedList> entry : map.entrySet()) {
@@ -31,10 +37,11 @@ public class CoreWorker {
             allFiles.add(samples);
         }
 
-        ArrayList<String> command = new ArrayList<>(); //arguments to enter in command line to run plotting script
-        command.add(pythonVersion);
-        command.add(scriptPath);
+         */
 
+
+        /*
+        This extracts the data from data files, and passes the raw data in to Python script
         String pythonArgs = new String();
         for (LinkedList<XRaySample> file: allFiles) {
             pythonArgs = "";
@@ -43,12 +50,18 @@ public class CoreWorker {
             }
             command.add(pythonArgs);
         }
+         */
+        //This collects the files to be sent to python script, by path
+        for (Map.Entry<File, LinkedList> entry: map.entrySet()) {
+            String filePath = entry.getKey().getAbsolutePath();
+            command.add(formatForOS(filePath));
+        }
 
         SystemCommandExecutor commandExecutor = new SystemCommandExecutor(command);
         int result = -1;
         result = commandExecutor.executeCommand();
 
-        //Get output from the script
+        //Get output from the Python script
         StringBuilder stdout = commandExecutor.getStandardOutputFromCommand();
         StringBuilder stderr = commandExecutor.getStandardErrorFromCommand();
 
@@ -61,6 +74,7 @@ public class CoreWorker {
         printMemoryUsage();
     }
 
+    //Process args and fetch requested data set
     private static HashMap<File, LinkedList> processArgs(String[] args, FileInput files) {
         try {
             int dataType = Integer.parseInt(args[0]);
@@ -79,13 +93,32 @@ public class CoreWorker {
         return files.getSampleMap();//Default to this data set if args are unintelligible
     }
 
+    /**
+     * Cross-platform compatibility
+     */
+    //Needed to properly format file paths
+    private static boolean isWindows(){
+        return System.getProperty("os.name").startsWith("Windows");
+    }
+
+    //Formats paths to work on Windows
+    private static String formatForOS(String path) {
+        if (isWindows)
+            return path.replace("/", "\\");
+        else
+            return path;
+    }
+
+    /**
+     * Program statistics
+     */
     //Prints the amount of memory used by JVM
     private static void printMemoryUsage() {
         Runtime runtime = Runtime.getRuntime();
         runtime.gc();// Run garbage collection
         long memory = runtime.totalMemory() - runtime.freeMemory();
         System.out.printf("Used memory: %d bytes%n ", memory);
-        System.out.printf("Memory in use: %d megabytes%n", (memory/(1024L * 1024L)));
+        System.out.printf("Used memory: %d megabytes%n", (memory/(1024L * 1024L)));
     }
 }
 
