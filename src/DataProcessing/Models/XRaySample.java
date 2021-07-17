@@ -1,9 +1,7 @@
-package Models;
-
-import java.text.Format;
+package DataProcessing.Models;
 
 /**
- * Models a single data point from a set
+ * Represents a single data point from a set
  *
  * Energy = Column 1
  *  Theta = Column 2
@@ -17,6 +15,7 @@ public class XRaySample {
     private double energy; //Column 1
     private double theta; //Column 2
     private double cnts_per_live; //Column 9 ????
+    private double absorption;
 
     public XRaySample(String energy, String theta, String cnts_per_live) {
         this.energy = formatExponents(energy);
@@ -26,7 +25,7 @@ public class XRaySample {
 
     /**
      * Converts string representation of exponential number to a double
-     * @param number - in the form: number -> E -> +/- -> number, e.g. 2.612412E+5
+     * @param number - String in the form: number -> E -> +/- -> number, e.g. 2.612412E+5
      * @return
      */
     private double formatExponents(String number) {

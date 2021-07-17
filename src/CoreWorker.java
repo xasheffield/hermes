@@ -1,4 +1,5 @@
-import Models.XRaySample;
+import GUI.GUI;
+import IO.FileInput;
 
 import java.io.File;
 import java.io.IOException;

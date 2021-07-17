@@ -1,4 +1,4 @@
-/**
+package IO; /**
  *
  * @author - Marco Seddon-Ferretti
  *
@@ -9,7 +9,7 @@
  *  Itb = instrument background measured with sample present
  */
 
-import Models.XRaySample;
+import DataProcessing.Models.XRaySample;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -84,7 +84,7 @@ public class FileInput {
 
 
     /**
-     * Converts each data line in a text file into an Models.XRaySample object
+     * Converts each data line in a text file into an DataProcessing.Models.XRaySample object
      * @param file
      * @return - The list of XRaySamples in the file
      */
@@ -105,7 +105,7 @@ public class FileInput {
             System.out.println("Could not locate file: " + file.getName());
         }
 
-        //Parse each line, extracting the relevant measurements and creating Models.XRaySample for each line
+        //Parse each line, extracting the relevant measurements and creating DataProcessing.Models.XRaySample for each line
         LinkedList<XRaySample> samples = new LinkedList<>();
         for (String line: fileLines) {
             String[] measurements = line.split("\t");
