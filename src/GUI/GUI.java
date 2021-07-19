@@ -24,7 +24,7 @@ public class GUI extends JFrame {
     private JLabel image2;
     private JLabel image1;
     private JPanel controlPanel;
-    private JList list1;
+    private JList i0List;
     private JButton loadFilesButton;
     private JButton button2;
 
@@ -46,9 +46,9 @@ public class GUI extends JFrame {
     private JButton plotAbsorptionButton;
     private JButton generateAbsorptionFileButton;
     private JButton generatePolynomialButton;
-    private JList list4;
-    private JList list5;
-    private JList list6;
+    private JList i0bList;
+    private JList itList;
+    private JList itbList;
     private JComboBox dataTypeComboBox;
     private JButton resetButton;
     private JButton continueButton;
@@ -67,67 +67,63 @@ public class GUI extends JFrame {
         this.dataManager = new DataManager();
         //addImages();
 
-        loadFilesButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                File[] filesToLoad = openFileChooser();
-                //If no files are found, return and print an error
-                if (filesToLoad.length == 0) {
-                    System.out.println("No valid files seem to have been selected");
-                    return;
-                }
-
-                //If this is the first time loading data, create a window prompting the user to select
-                //which columns correspond to the relevant data
-                if (!fileLoader.valuesInitialised) {
-                    String[] columnNames = fileLoader.getColumnNames(filesToLoad[0]);
-
-                    columnSelectionDialog(columnNames);
-                    /*
-                    FileLoadingGUI flGUI = new FileLoadingGUI("Think of a name", fileLoader, filesToLoad);
-                    Thread selectionGUI = new Thread(flGUI);
-                    //while (flGUI.isVisible()) {
-                    //    System.out.println("asd");
-                    //}
-                    selectionGUI.start();
-                    try {
-                        Thread.currentThread().wait();
-                    } catch (InterruptedException interruptedException) {
-                        interruptedException.printStackTrace();
-                    }
-                    System.out.println(selectionGUI.getState());
-                    System.out.println(Thread.currentThread().getState());
-                    Thread.currentThread().run();
-
-                     */
-
-
-                }
-                //Get the MeasurementType of files to be loaded from user input
-                MeasurementType fileType = MeasurementType.valueOf((String) dataTypeComboBox.getSelectedItem());
-
-                //Load files and store in DataManager
-                ArrayList<DataFile> loadedFiles = fileLoader.loadFiles(fileType, filesToLoad);
-                dataManager.addFiles(loadedFiles, fileType);
-                System.out.println("Let's see");
-            }
-        });
-        this.pack();
+        /**
+         * Contains functionality for loading files from the user's file system
+         */
+        loadFilesButton.addActionListener(loadFilesActionListener());
+        /*
+        TODO why is this here?
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+         */
+        generateMeanButton.addActionListener(generateMeanActionListener());
     }
 
-    private void columnSelectionDialog(String[] columnNames) {
-        int input;
-        JComboBox box = new JComboBox(columnNames);
-        input = JOptionPane.showConfirmDialog(this, box, "Energy", JOptionPane.DEFAULT_OPTION);
+    /**
+     * A pop-up dialog which prompts users to input correct columns to use
+     * @param columnNames - The names of columns in the data
+     * @param fl - FileLoader, in order to set the column indeces
+     */
+    private void columnSelectionDialog(String[] columnNames, FileLoader fl) {
+        JComboBox energyBox = new JComboBox(columnNames);
+        JComboBox thetaBox = new JComboBox(columnNames);
+        JComboBox countsBox = new JComboBox(columnNames);
+        JLabel eLabel = new JLabel("Energy");
+        JLabel tLabel = new JLabel("Theta");
+        JLabel cLabel = new JLabel("Counts");
 
-        if (input == JOptionPane.OK_OPTION) {
-            int energyIndex = box.getSelectedIndex();
-            System.out.println(energyIndex);
+        Object[] options = new Object[] {energyBox, thetaBox, countsBox};
+
+        JPanel optionPanel = new JPanel();
+        optionPanel.add(eLabel);
+        optionPanel.add(energyBox);
+        optionPanel.add(Box.createVerticalStrut(15));
+        optionPanel.add(tLabel);
+        optionPanel.add(thetaBox);
+        optionPanel.add(Box.createVerticalStrut(15));
+        optionPanel.add(cLabel);
+        optionPanel.add(countsBox);
+
+        int result = JOptionPane.showConfirmDialog(null, optionPanel,
+                "Please Select Energy, Theta, Counts", JOptionPane.OK_CANCEL_OPTION);
+
+        // If the user presses okay button
+        if (result == JOptionPane.YES_OPTION) {
+            int energyIndex = energyBox.getSelectedIndex();
+            int thetaIndex = thetaBox.getSelectedIndex();
+            int countsIndex = countsBox.getSelectedIndex();
+            fl.setEnergyIndex(energyIndex);
+            fl.setThetaIndex(thetaIndex);
+            fl.setCountsIndex(countsIndex);
+            fl.setValuesInitialised(true);
+        }
+        else {
+            //TODO do we need a message for cancellation?
+            //JOptionPane.showMessageDialog(this, "Please input ");
         }
     }
 
@@ -140,8 +136,8 @@ public class GUI extends JFrame {
     }
 
     /**
-     * Opens an interface allowing a user to sele
-     * @return The files selected by the user, in an array. Returns an empty array if no files are selected.
+     * Opens an interface allowing a user to select a file from file system
+     * @return The file(s) selected by the user, in an array. Returns an empty array if no files are selected.
      */
     private File[] openFileChooser(){
         File[] files;
@@ -198,5 +194,56 @@ public class GUI extends JFrame {
 
     private void addActionListeners() {
         
+    }
+
+    private ActionListener loadFilesActionListener() {
+        return new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                File[] filesToLoad = openFileChooser();
+                //If no files are found, return and print an error
+                if (filesToLoad.length == 0) {
+                    System.out.println("No valid files have been selected");
+                    return;
+                }
+
+                //If this is the first time loading data, create a window prompting the user to select
+                //which columns correspond to the relevant data, and update FileLoader to save these values
+                if (!fileLoader.valuesInitialised) {
+                    String[] columnNames = fileLoader.getColumnNames(filesToLoad[0]);
+                    columnSelectionDialog(columnNames, fileLoader);
+                }
+                //Get the MeasurementType of files to be loaded from user input
+                MeasurementType fileType = MeasurementType.valueOf((String) dataTypeComboBox.getSelectedItem());
+
+                //Load files and store in DataManager
+                ArrayList<DataFile> loadedFiles = fileLoader.loadFiles(fileType, filesToLoad);
+                dataManager.addFiles(loadedFiles, fileType);
+
+                //Set model of corresponding list
+                JList listToUpdate;
+                switch(fileType) {
+                    case I0: listToUpdate = i0List; break;
+                    case I0b: listToUpdate = i0bList; break;
+                    case It: listToUpdate = itList; break;
+                    case Itb: listToUpdate = itbList; break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + fileType);
+                }
+
+                //Get and update appropriate list model
+                DefaultListModel model = (DefaultListModel) listToUpdate.getModel();
+                loadedFiles.stream().forEach(file -> model.addElement(file));
+                pack();
+            }
+        };
+    }
+
+    private ActionListener generateMeanActionListener() {
+        return new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            }
+        };
     }
 }

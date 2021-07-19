@@ -27,30 +27,8 @@ public class FileLoadingGUI extends JFrame implements Runnable {
         super(title);
         this.fileLoader = fLoader;
         this.initComponents(fLoader.getColumnNames(files[0]));
-    }
-
-    private void initComponents(String[] columnNames){
-        /*this.setVisible(true);
-        this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        //this.setMinimumSize(new Dimension(600,450));
-        this.setLocationRelativeTo(null);//Centers the frame
-
-         */
-
-        energyComboBox.setModel(new DefaultComboBoxModel(columnNames));
-        thetaComboBox.setModel(new DefaultComboBoxModel(columnNames));
-        countsComboBox.setModel(new DefaultComboBoxModel(columnNames));
-    }
-
-    @Override
-    public void run() {
         this.setContentPane(rootPanel);
         this.pack();
-
-        this.setVisible(true);
-        this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        //this.setMinimumSize(new Dimension(600,450));
-        this.setLocationRelativeTo(null);//Centers the frame
 
         enterButton.addActionListener(new ActionListener() {
             @Override
@@ -62,5 +40,27 @@ public class FileLoadingGUI extends JFrame implements Runnable {
                 dispose();
             }
         });
+    }
+
+    private void initComponents(String[] columnNames){
+        this.setVisible(true);
+        this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        //this.setMinimumSize(new Dimension(600,450));
+        this.setLocationRelativeTo(null);//Centers the frame
+
+
+
+        energyComboBox.setModel(new DefaultComboBoxModel(columnNames));
+        thetaComboBox.setModel(new DefaultComboBoxModel(columnNames));
+        countsComboBox.setModel(new DefaultComboBoxModel(columnNames));
+    }
+
+    @Override
+    public void run() {
+
+        this.setVisible(true);
+        this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        //this.setMinimumSize(new Dimension(600,450));
+        this.setLocationRelativeTo(null);//Centers the frame
     }
 }

@@ -1,6 +1,12 @@
 package DataProcessing.Processors;
 
 import DataProcessing.Models.DataFile;
+import DataProcessing.Models.MeasurementType;
+import DataProcessing.Models.XRaySample;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class DataProcessor {
 
@@ -8,12 +14,49 @@ public class DataProcessor {
      * @param files - any number of data files from which to generate the mean
      * @return mean data file generated from inputs
      */
-    public DataFile generateMean(DataFile... files){
+    public DataFile generateMean(MeasurementType dataType, String fileHeader, DataFile... files){
         //TODO method body
+        /*
         for (DataFile file: files){
             System.out.println(file.getFilePath());
         }
-        return null;
+         */
+        //TODO Better way of iterating through samples
+        int sampleNumber = files[0].getData().size();
+        double energy = 0;
+        double theta = 0;
+        double counts = 0;
+
+
+        ArrayList<XRaySample> meanSamples = new ArrayList<>();
+        for (int i = 0; i <sampleNumber; i++) {
+            ArrayList<XRaySample> samplesList = new ArrayList<>();
+            for (DataFile file: files) {
+                samplesList.add(file.getData().get(i));
+            }
+            XRaySample meanSample = generateMean(samplesList);
+            meanSamples.add(meanSample);
+        }
+        //TODO filepath and fileheader
+        return new DataFile(dataType, files[0].getFilePath(), "", meanSamples);
+    }
+
+    /**
+     * Generates a mean sample from a list of XRaySamples
+     * @param samples
+     * @return Mean sample
+     */
+    public XRaySample generateMean(ArrayList<XRaySample> samples) {
+        double sampleNumber = samples.size();
+        ArrayList<Double> energy = (ArrayList<Double>) samples.stream().map(x -> x.getEnergy()).collect(Collectors.toList());
+        ArrayList<Double> theta = (ArrayList<Double>) samples.stream().map(x -> x.getTheta()).collect(Collectors.toList());
+        ArrayList<Double> counts = (ArrayList<Double>) samples.stream().map(x -> x.getCnts_per_live()).collect(Collectors.toList());
+
+        Double meanEnergy = energy.stream().mapToDouble(a -> a).sum() / sampleNumber;
+        Double meanTheta = theta.stream().mapToDouble(a -> a).sum() / sampleNumber;
+        Double meanCounts = counts.stream().mapToDouble(a -> a).sum() / sampleNumber;
+
+        return new XRaySample(meanEnergy, meanTheta, meanCounts);
     }
 
     /**

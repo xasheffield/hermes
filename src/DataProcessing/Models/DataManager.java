@@ -4,7 +4,11 @@
  */
 package DataProcessing.Models;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class DataManager {
 
@@ -26,5 +30,27 @@ public class DataManager {
             case It: itFiles.addAll(files);
             case Itb: itbFiles.addAll(files);
         }
+    }
+
+
+    /**
+     * Gets a list of Data File names of the given type
+     * @param type - MeasurementType of data
+     * @return Array of file names
+     */
+    public ArrayList<String> getFileNames(MeasurementType type) {
+        ArrayList<DataFile> files;
+        switch (type) {
+            case I0: files = i0Files;
+            case I0b: files = i0bFiles;
+            case It: files = itFiles;
+            case Itb: files = itbFiles;
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + type);
+        }
+        ArrayList<String> fileNames = (ArrayList<String>) files.stream().map(
+                                    datafile -> datafile.getFileName()).collect(Collectors.toList());
+        return fileNames; //Passing 0 size array causes it to create new array
     }
 }

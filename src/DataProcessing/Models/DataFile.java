@@ -9,6 +9,8 @@
 
 package DataProcessing.Models;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class DataFile {
@@ -42,5 +44,15 @@ public class DataFile {
 
     public String getHeader() {
         return header;
+    }
+
+    public String getFileName() {
+        Path filePath = Paths.get(this.getFilePath());
+        return filePath.getFileName().toString();
+    }
+
+    @Override
+    public String toString() {
+        return getFileName();
     }
 }
