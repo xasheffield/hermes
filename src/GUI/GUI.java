@@ -3,6 +3,7 @@ package GUI;
 import DataProcessing.Models.DataFile;
 import DataProcessing.Models.DataManager;
 import DataProcessing.Models.MeasurementType;
+import DataProcessing.Processors.DataProcessor;
 import IO.FileLoader;
 
 import javax.imageio.ImageIO;
@@ -14,6 +15,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 
@@ -52,9 +54,11 @@ public class GUI extends JFrame {
     private JComboBox dataTypeComboBox;
     private JButton resetButton;
     private JButton continueButton;
+    private JButton button1;
 
     FileLoader fileLoader;
     DataManager dataManager;
+    DataProcessor dataProcessor;
 
 
     public GUI(String title) {
@@ -65,6 +69,8 @@ public class GUI extends JFrame {
         this.setContentPane(rootTabPane);
         this.fileLoader = new FileLoader();
         this.dataManager = new DataManager();
+        this.dataProcessor = new DataProcessor();
+        this.pack();
         //addImages();
 
         /**
@@ -73,11 +79,7 @@ public class GUI extends JFrame {
         loadFilesButton.addActionListener(loadFilesActionListener());
         /*
         TODO why is this here?
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
 
          */
         generateMeanButton.addActionListener(generateMeanActionListener());
@@ -239,10 +241,30 @@ public class GUI extends JFrame {
         };
     }
 
+    /**
+     * Adds functionality to generate mean button. Creates a pop-up dialogue prompting
+     * user to name the file and provide a header.
+     * @return
+     */
     private ActionListener generateMeanActionListener() {
         return new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                //TODO ask is user wants to use entire energy range
+                //If not, ask user to specify a range (in energy)
+                //TODO also create lst file with a list of files generated from it
+
+
+                String fileName = JOptionPane.showInputDialog("Enter File Name", "");
+                String header = JOptionPane.showInputDialog("Enter File Header", "");
+                MeasurementType type = MeasurementType.valueOf((String) dataTypeComboBox.getSelectedItem());
+                //TODO either detect correct list based on combobox, or add complexity to OptionPanes to choose files
+                List<DataFile> files = i0List.getSelectedValuesList();
+                if (files.isEmpty()) {
+                    JOptionPane.showMessageDialog(new JFrame(), "Select a DataType and files to include to generate a mean data set ");
+                    return;
+                }
+                DataFile meanFile = dataProcessor.generateMean(type, header, files.toArray(new DataFile[0]));
             }
         };
     }

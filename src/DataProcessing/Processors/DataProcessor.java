@@ -7,6 +7,7 @@ import DataProcessing.Models.XRaySample;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.commons.math3.fitting.*;
 
 public class DataProcessor {
 
@@ -47,6 +48,8 @@ public class DataProcessor {
      * @return Mean sample
      */
     public XRaySample generateMean(ArrayList<XRaySample> samples) {
+        //TODO create test
+
         double sampleNumber = samples.size();
         ArrayList<Double> energy = (ArrayList<Double>) samples.stream().map(x -> x.getEnergy()).collect(Collectors.toList());
         ArrayList<Double> theta = (ArrayList<Double>) samples.stream().map(x -> x.getTheta()).collect(Collectors.toList());
@@ -64,8 +67,24 @@ public class DataProcessor {
      * @param file
      * @return String representation of polynomial fit to data file
      */
-    public String generatePolynomial(DataFile file) {
-        //TODO method body
+    public String generatePolynomial(DataFile file, int polyDegree) {
+        //TODO create test
+
+
+        PolynomialCurveFitter pcf = PolynomialCurveFitter.create(3);
+
+        // Store data as WeightedObservedPoints
+        final WeightedObservedPoints obs = new WeightedObservedPoints();
+        for (XRaySample sample: file.getData()) {
+            obs.add(sample.getTheta(), sample.getCnts_per_live());
+        }
+        final PolynomialCurveFitter fitter
+                = PolynomialCurveFitter.create(0).withStartPoint(new double[] { -1e-20, 3e15, -5e25 });
+
+        final double[] best = fitter.fit(obs.toList());
+
+
+
         return "";
     }
 
