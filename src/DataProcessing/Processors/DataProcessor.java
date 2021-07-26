@@ -4,6 +4,7 @@ import DataProcessing.Models.DataFile;
 import DataProcessing.Models.MeasurementType;
 import DataProcessing.Models.XRaySample;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,7 +16,7 @@ public class DataProcessor {
      * @param files - any number of data files from which to generate the mean
      * @return mean data file generated from inputs
      */
-    public DataFile generateMean(MeasurementType dataType, String fileHeader, DataFile... files){
+    public DataFile generateMean(MeasurementType dataType, String fileName, String fileHeader, DataFile... files){
         //TODO method body
         /*
         for (DataFile file: files){
@@ -23,7 +24,8 @@ public class DataProcessor {
         }
          */
         //TODO Better way of iterating through samples
-        int sampleNumber = files[0].getData().size();
+        DataFile firstFile = files[0];
+        int sampleNumber = firstFile.getData().size();
         double energy = 0;
         double theta = 0;
         double counts = 0;
@@ -38,8 +40,9 @@ public class DataProcessor {
             XRaySample meanSample = generateMean(samplesList);
             meanSamples.add(meanSample);
         }
-        //TODO filepath and fileheader
-        return new DataFile(dataType, files[0].getFilePath(), "", meanSamples);
+        File saveDirectory = new File(firstFile.getFilePath()).getParentFile();
+        String filePath = saveDirectory.getAbsolutePath() + "/" + fileName + ".txt";
+        return new DataFile(dataType, filePath, fileHeader, meanSamples);
     }
 
     /**
@@ -92,7 +95,12 @@ public class DataProcessor {
      *
      * @return Value of absorption (for file?)
      */
-    public int calculateAbsorption() {
+    public int calculateAbsorption(DataFile i0, DataFile it) {
+        //TODO method body
+        return 0;
+    }
+
+    public int calculateAbsorption(DataFile i0, DataFile it, DataFile i0b, DataFile itb) {
         //TODO method body
         return 0;
     }
