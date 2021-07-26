@@ -80,4 +80,14 @@ public class XRaySample {
     public void setAbsorption(double absorption) {
         this.absorption = absorption;
     }
+
+    @Override
+    public String toString() {
+        return "XRaySample{" +
+                "energy=" + energy +
+                ", theta=" + theta +
+                ", cnts_per_live=" + cnts_per_live +
+                ", absorption=" + absorption +
+                '}';
+    }
 }

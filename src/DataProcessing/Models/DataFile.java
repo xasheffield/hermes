@@ -12,6 +12,9 @@ package DataProcessing.Models;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class DataFile {
 
@@ -40,6 +43,19 @@ public class DataFile {
 
     public ArrayList<XRaySample> getData() {
         return data;
+    }
+
+    /**
+     *
+     * @return The data contained in the sample as a string, in order Energy, Theta, Cnts_per_live
+     */
+    public List<String> getDataAsString() {
+        //TODO design choice whether to duplicate and overload method for absorption, or add parameter
+        List<String> stringData = new LinkedList<>();
+        stringData.add("Energy(ev)\tTheta\tcnts_per_live");
+        stringData.addAll(data.stream().map( x -> x.getEnergy() + "\t" + x.getTheta() +
+                "\t" + x.getCnts_per_live() + "\t").collect(Collectors.toList()));
+        return stringData;
     }
 
     public String getHeader() {
