@@ -5,6 +5,7 @@ import DataProcessing.Models.DataManager;
 import DataProcessing.Models.MeasurementType;
 import DataProcessing.Processors.DataProcessor;
 import IO.FileLoader;
+import IO.FileWriter;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -14,6 +15,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -54,9 +56,10 @@ public class GUI extends JFrame {
     private JComboBox dataTypeComboBox;
     private JButton resetButton;
     private JButton continueButton;
-    private JButton button1;
+    private JButton resetDataButton;
 
     FileLoader fileLoader;
+    FileWriter fileWriter;
     DataManager dataManager;
     DataProcessor dataProcessor;
 
@@ -67,30 +70,44 @@ public class GUI extends JFrame {
         this.initComponents();
         this.pack();
         this.setContentPane(rootTabPane);
+
+        /**
+         * Initialise IO and DataProcessing
+         */
         this.fileLoader = new FileLoader();
+        this.fileWriter = new FileWriter();
         this.dataManager = new DataManager();
         this.dataProcessor = new DataProcessor();
         this.pack();
-        //addImages();
 
         /**
-         * Contains functionality for loading files from the user's file system
+         * Add action listeners
          */
         loadFilesButton.addActionListener(loadFilesActionListener());
-        /*
-        TODO why is this here?
-
-
-         */
         generateMeanButton.addActionListener(generateMeanActionListener());
+        generatePolynomialButton.addActionListener(generatePolynomialActionListener());
+        resetDataButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int option = JOptionPane.showConfirmDialog(new JFrame(), "Are you sure you would like to clear all loaded files?");
+                //TODO DRY
+                if (option == JOptionPane.YES_OPTION) {
+                    ((DefaultListModel) i0List.getModel()).removeAllElements();
+                    ((DefaultListModel) i0bList.getModel()).removeAllElements();
+                    ((DefaultListModel) itList.getModel()).removeAllElements();
+                    ((DefaultListModel) itbList.getModel()).removeAllElements();
+                }
+            }
+        });
     }
+
 
     /**
      * A pop-up dialog which prompts users to input correct columns to use
      * @param columnNames - The names of columns in the data
      * @param fl - FileLoader, in order to set the column indeces
      */
-    private void columnSelectionDialog(String[] columnNames, FileLoader fl) {
+    private boolean columnSelectionDialog(String[] columnNames, FileLoader fl) {
         JComboBox energyBox = new JComboBox(columnNames);
         JComboBox thetaBox = new JComboBox(columnNames);
         JComboBox countsBox = new JComboBox(columnNames);
@@ -122,10 +139,12 @@ public class GUI extends JFrame {
             fl.setThetaIndex(thetaIndex);
             fl.setCountsIndex(countsIndex);
             fl.setValuesInitialised(true);
+            return true;
         }
         else {
-            //TODO do we need a message for cancellation?
-            //JOptionPane.showMessageDialog(this, "Please input ");
+            JOptionPane.showMessageDialog(this, "File generation cancelled");
+            return false;
+
         }
     }
 
@@ -213,7 +232,14 @@ public class GUI extends JFrame {
                 //which columns correspond to the relevant data, and update FileLoader to save these values
                 if (!fileLoader.valuesInitialised) {
                     String[] columnNames = fileLoader.getColumnNames(filesToLoad[0]);
-                    columnSelectionDialog(columnNames, fileLoader);
+                    if (columnNames.length == 0) {
+                        return;
+                    }
+
+                    //Cancel file generation if user exits column selection popup
+                    if (!columnSelectionDialog(columnNames, fileLoader)) {
+                        return;
+                    }
                 }
                 //Get the MeasurementType of files to be loaded from user input
                 MeasurementType fileType = MeasurementType.valueOf((String) dataTypeComboBox.getSelectedItem());
@@ -223,15 +249,7 @@ public class GUI extends JFrame {
                 dataManager.addFiles(loadedFiles, fileType);
 
                 //Set model of corresponding list
-                JList listToUpdate;
-                switch(fileType) {
-                    case I0: listToUpdate = i0List; break;
-                    case I0b: listToUpdate = i0bList; break;
-                    case It: listToUpdate = itList; break;
-                    case Itb: listToUpdate = itbList; break;
-                    default:
-                        throw new IllegalStateException("Unexpected value: " + fileType);
-                }
+                JList listToUpdate = getList(fileType);
 
                 //Get and update appropriate list model
                 DefaultListModel model = (DefaultListModel) listToUpdate.getModel();
@@ -250,22 +268,51 @@ public class GUI extends JFrame {
         return new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //TODO ask is user wants to use entire energy range
+                //TODO ask if user wants to use entire energy range
                 //If not, ask user to specify a range (in energy)
-                //TODO also create lst file with a list of files generated from it
-
 
                 String fileName = JOptionPane.showInputDialog("Enter File Name", "");
                 String header = JOptionPane.showInputDialog("Enter File Header", "");
                 MeasurementType type = MeasurementType.valueOf((String) dataTypeComboBox.getSelectedItem());
-                //TODO either detect correct list based on combobox, or add complexity to OptionPanes to choose files
-                List<DataFile> files = i0List.getSelectedValuesList();
+                List<DataFile> files = getList(type).getSelectedValuesList();
                 if (files.isEmpty()) {
-                    JOptionPane.showMessageDialog(new JFrame(), "Select a DataType and files to include to generate a mean data set ");
+                    JOptionPane.showMessageDialog(new JFrame(), "No data files found of type: " + type.toString());
                     return;
                 }
-                DataFile meanFile = dataProcessor.generateMean(type, header, files.toArray(new DataFile[0]));
+                DataFile meanFile = dataProcessor.generateMean(type, fileName, header, files.toArray(new DataFile[0]));
+
+                try {
+                    fileWriter.writeDataFile(meanFile);
+                    String directoryPath = Paths.get(meanFile.getFilePath()).getParent().toString() + System.getProperty("file.separator");
+                    fileWriter.writeLstFile(files, fileName, header, directoryPath);
+                } catch (IOException ioe) {
+
+                }
             }
         };
+    }
+
+    /**
+     * Functionality for generate polynomial button. Prompts user to to enter file name, header, and choose degree to fit
+     * @return
+     */
+    private ActionListener generatePolynomialActionListener() {
+        return new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JOptionPane.showMessageDialog(new JFrame(), "Something");
+
+            }
+        };
+    }
+
+    private JList getList(MeasurementType type) {
+        switch (type) {
+            case I0: return i0List;
+            case I0b: return i0bList;
+            case It: return itList;
+            case Itb: return itbList;
+        }
+        return null;
     }
 }
