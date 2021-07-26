@@ -8,6 +8,7 @@ import DataProcessing.Models.DataFile;
 import DataProcessing.Models.MeasurementType;
 import DataProcessing.Models.XRaySample;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -19,7 +20,8 @@ public class FileLoader {
 
     /**
      * Indeces of the relevant columns of data, input by the user when the first data set is loaded
-     * Set initially to -1
+     * Set initially to -1, when they are set, the valuesInitialised flag is set to true and the
+     * values are stored for the rest of the session.
      */
     int energyIndex = -1;
     int thetaIndex = -1;
@@ -38,6 +40,11 @@ public class FileLoader {
     public void setValuesInitialised(boolean valuesInitialised) {
         this.valuesInitialised = valuesInitialised;
     }
+    public void setIndeces(int energy, int theta, int counts) {
+        this.energyIndex = energy;
+        this.thetaIndex = theta;
+        this.countsIndex = counts;
+    }
 
     /**
      *
@@ -52,6 +59,9 @@ public class FileLoader {
                 //Find the line which separates the header from column names
                 if (line.startsWith("*")) {
                     String[] columnNames = scanner.nextLine().split("\t");
+                    if (columnNames.length == 0) {
+                        JOptionPane.showMessageDialog(new JFrame(), "Unable to find any data columns");
+                    }
                     return columnNames;
                 }
             }
@@ -62,15 +72,6 @@ public class FileLoader {
         return new String[0];
     }
 
-
-
-
-
-
-
-
-    //-----------------------
-
     /**
      * Loads a data file from the file system
      * @param type The data type of the file, provided by the user through the GUI
@@ -80,14 +81,14 @@ public class FileLoader {
     public DataFile loadFile(MeasurementType type, File file) {
         String filePath = file.getAbsolutePath();
         String fileHeader = parseHeader(file);
-        ArrayList<XRaySample> fileMeasurements = parseMeasurements(file,1,2,3);
+        ArrayList<XRaySample> fileMeasurements = parseMeasurements(file,energyIndex,thetaIndex,countsIndex);
 
         DataFile loadedFile = new DataFile(type, filePath, fileHeader, fileMeasurements);
         return loadedFile;
     }
 
     /**
-     * Loads multiple files from
+     * Loads multiple files from the file system, using the loadFile method
      * @param dataType The data type of the file, provided by the user through the GUI
      * @param files
      * @return ArrayList of loaded DataFile objects
@@ -105,9 +106,24 @@ public class FileLoader {
      * @param file
      * @return File header
      */
-    private String parseHeader(File file) {
-        //TODO method body
-        return "";
+    public String parseHeader(File file) {
+        String header = "";
+        try {
+            Scanner scanner = new Scanner(file);
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                // Read lines until data separator (*)
+                if (!line.contains("*"))  //Only read the actual data lines
+                    header += line;
+                else
+                    break;
+            }
+
+        } catch (FileNotFoundException fnfe) {
+            fnfe.printStackTrace();
+            System.out.println("Could not locate file: " + file.getName());
+        }
+        return header;
     }
 
 
@@ -122,12 +138,19 @@ public class FileLoader {
         //Read line of file which contains data
         try {
             Scanner scanner = new Scanner(file);
+            //Skip lines until data separator, and then column names
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
-                //TODO better check for which lines are actual data lines
-                if (!line.contains("eV") && !line.contains("*"))  //Only read the actual data lines
-                    fileLines.add(line);
+                if (line.contains("*")) {
+                    scanner.nextLine(); // skip column names line
+                    break;
+                }
             }
+            while (scanner.hasNextLine()) {
+                fileLines.add(scanner.nextLine());
+            }
+
+
 
         } catch (FileNotFoundException fnfe) {
             fnfe.printStackTrace();
@@ -138,8 +161,7 @@ public class FileLoader {
         ArrayList<XRaySample> samples = new ArrayList<>();
         for (String line: fileLines) {
             String[] measurements = line.split("\t");
-            //TODO detect/give user option of which columns are relevant
-            samples.add(new XRaySample(measurements[energyIndex], measurements[countsIndex], measurements[thetaIndex]));
+            samples.add(new XRaySample(measurements[energyIndex], measurements[thetaIndex], measurements[countsIndex]));
         }
         return samples;
     }
