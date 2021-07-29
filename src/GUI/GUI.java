@@ -1,17 +1,19 @@
 package GUI;
 
-import DataProcessing.Models.DataFile;
-import DataProcessing.Models.DataManager;
-import DataProcessing.Models.MeasurementType;
+import DataProcessing.Models.*;
 import DataProcessing.Processors.DataProcessor;
+import Graphing.Grapher;
 import IO.FileLoader;
 import IO.FileWriter;
+import org.jfree.chart.ChartPanel;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +38,7 @@ public class GUI extends JFrame {
     private JTabbedPane rootTabPane; //Base panel, which encapsulates the rest of the program
     private JButton generateMeanButton;
     private JPanel plottingPanel;
-    private JList list2;
+    private JList plotFileList;
     private JList list3;
     private JButton button3;
     private JButton button4;
@@ -54,14 +56,18 @@ public class GUI extends JFrame {
     private JList itList;
     private JList itbList;
     private JComboBox dataTypeComboBox;
-    private JButton resetButton;
+    private JButton resetPlotFilesButton;
     private JButton continueButton;
+    private JButton resetAllDataButton;
+    private JPanel plotPanel;
     private JButton resetDataButton;
+
 
     FileLoader fileLoader;
     FileWriter fileWriter;
     DataManager dataManager;
     DataProcessor dataProcessor;
+    Grapher grapher;
 
 
     public GUI(String title) {
@@ -72,12 +78,21 @@ public class GUI extends JFrame {
         this.setContentPane(rootTabPane);
 
         /**
-         * Initialise IO and DataProcessing
+         * Initialise IO, DataProcessing and Grapher
          */
-        this.fileLoader = new FileLoader();
-        this.fileWriter = new FileWriter();
-        this.dataManager = new DataManager();
-        this.dataProcessor = new DataProcessor();
+        fileLoader = new FileLoader();
+        fileWriter = new FileWriter();
+        dataManager = new DataManager();
+        dataProcessor = new DataProcessor();
+        grapher = new Grapher();
+
+        /*
+        ChartPanel cp = grapher.createGraph();
+        plotPanel.setLayout(new java.awt.BorderLayout());
+        plotPanel.add(cp);
+        plotPanel.validate();
+
+         */
         this.pack();
 
         /**
@@ -86,17 +101,78 @@ public class GUI extends JFrame {
         loadFilesButton.addActionListener(loadFilesActionListener());
         generateMeanButton.addActionListener(generateMeanActionListener());
         generatePolynomialButton.addActionListener(generatePolynomialActionListener());
-        resetDataButton.addActionListener(new ActionListener() {
+        resetAllDataButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int option = JOptionPane.showConfirmDialog(new JFrame(), "Are you sure you would like to clear all loaded files?");
-                //TODO DRY
+
+                //Clear each list if user decides to proceed
+                if (option == JOptionPane.YES_OPTION) {
+                    for (MeasurementType mt : MeasurementType.values()) {
+                        ((DefaultListModel) getList(mt).getModel()).removeAllElements();
+                    }
+                }/*
                 if (option == JOptionPane.YES_OPTION) {
                     ((DefaultListModel) i0List.getModel()).removeAllElements();
                     ((DefaultListModel) i0bList.getModel()).removeAllElements();
                     ((DefaultListModel) itList.getModel()).removeAllElements();
                     ((DefaultListModel) itbList.getModel()).removeAllElements();
                 }
+                */
+            }
+        });
+        plotGraphsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DataFile fileToPlot = (DataFile) i0List.getSelectedValue();
+                ChartPanel graph = grapher.testGraphCreation(fileToPlot);
+                JFrame frame = new JFrame("Test");
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                frame.setContentPane(graph);
+                frame.pack();
+                frame.setVisible(true);
+                
+            }
+        });
+        plotFileList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if ( SwingUtilities.isRightMouseButton(e) )
+                {
+                    System.out.println("Right click");
+
+                }
+            }
+        });
+        resetPlotFilesButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ((DefaultListModel)plotFileList.getModel()).removeAllElements();
+            }
+        });
+        resetDataButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                MeasurementType typeToClear = MeasurementType.valueOf((String) dataTypeComboBox.getSelectedItem());
+                int result = JOptionPane.showConfirmDialog(new JFrame(), "Are you sure you would like to clear all loaded "
+                        + typeToClear.toString() + " files?");
+                if (result == JOptionPane.YES_OPTION) {
+                    ((DefaultListModel) getList(MeasurementType.valueOf((String) dataTypeComboBox.getSelectedItem())).getModel()).removeAllElements();
+                }
+            }
+        });
+        plotAbsorptionButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (backgroundIsSignificantCheckBox.isSelected()) {
+                    //TODO case split
+                }
+                DataFile i0 = (DataFile) i0List.getModel().getElementAt(0);
+                DataFile it = (DataFile) itList.getModel().getElementAt(0);
+                ArrayList<Double> absorption = dataProcessor.calculateAbsorption(i0, it);
+
+                //JOptionPane.showOptionDialog();
+                //TODO give user way to select files
             }
         });
     }
@@ -273,6 +349,12 @@ public class GUI extends JFrame {
 
                 String fileName = JOptionPane.showInputDialog("Enter File Name", "");
                 String header = JOptionPane.showInputDialog("Enter File Header", "");
+
+                //Will be null if user cancelled input dialog, return if so
+                if (fileName == null || header == null) {
+                    JOptionPane.showMessageDialog(new JFrame(), "Action cancelled.");
+                    return;
+                }
                 MeasurementType type = MeasurementType.valueOf((String) dataTypeComboBox.getSelectedItem());
                 List<DataFile> files = getList(type).getSelectedValuesList();
                 if (files.isEmpty()) {
@@ -306,6 +388,11 @@ public class GUI extends JFrame {
         };
     }
 
+    /**
+     * The JList containing the loaded files of a given measurement type
+     * @param type MeasurementType of list to retrieve
+     * @return JList object containing DataFiles
+     */
     private JList getList(MeasurementType type) {
         switch (type) {
             case I0: return i0List;
