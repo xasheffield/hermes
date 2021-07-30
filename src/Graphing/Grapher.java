@@ -14,6 +14,7 @@ import org.jfree.util.ShapeUtilities;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 
 public class Grapher {
 
@@ -54,11 +55,16 @@ public class Grapher {
     public ChartPanel testGraphCreation(DataFile file) {
         XYSeriesCollection dataset = new XYSeriesCollection();
         XYSeries series1 = new XYSeries(file.getFileName());
+
+        XYSeries series2 = new XYSeries(file.getFileName()+"2");
+
         for (XRaySample sample: file.getData()) {
             series1.add(sample.getEnergy(), sample.getCnts_per_live());
-        }
+            series2.add(sample.getEnergy(), sample.getCnts_per_live()+1000);
 
+        }
         dataset.addSeries(series1);
+        dataset.addSeries(series2);
 
         JFreeChart scatterPlot = ChartFactory.createScatterPlot("Energy vs Counts", "Energy", "Counts per live", dataset,
                 PlotOrientation.VERTICAL, true, false, false);
@@ -67,7 +73,7 @@ public class Grapher {
 
         XYPlot plot = scatterPlot.getXYPlot();
         XYLineAndShapeRenderer renderer0 = new XYLineAndShapeRenderer();
-        renderer0.setSeriesLinesVisible(0, false);
+        renderer0.setSeriesLinesVisible(0, false); // Hide lines between points
         plot.setRenderer(0, renderer0);
         plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(0, Color.black);
         plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(0, ShapeUtilities.createDiagonalCross(1, 1));
@@ -75,8 +81,36 @@ public class Grapher {
         return new ChartPanel(scatterPlot);
     }
 
-    public ChartPanel createOffsetGraph(double[] x, double[] y, String xlabel, String ylabel, int offset) {
+    public ChartPanel createOffsetGraph(int offset, ArrayList<DataFile> files) {
         //TODO method body
-        return null;
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        ArrayList<XYSeries> seriesList = new ArrayList<>();
+        int i = 0;//Counter for offset on each dataset
+
+        for (DataFile file: files) {
+            XYSeries set = new XYSeries(file.getFileName());
+            for (XRaySample sample: file.getData()) {
+                set.add(sample.getEnergy(), sample.getCnts_per_live() + offset*i);
+            }
+            seriesList.add(set);
+            i++;
+        }
+        for (XYSeries series: seriesList) {
+            dataset.addSeries(series);
+        }
+
+        JFreeChart scatterPlot = ChartFactory.createScatterPlot("Energy vs Counts", "Energy", "Counts per live", dataset,
+                PlotOrientation.VERTICAL, true, false, false);
+        scatterPlot.setBackgroundPaint(Color.white);
+
+        XYPlot plot = scatterPlot.getXYPlot();
+        XYLineAndShapeRenderer renderer0 = new XYLineAndShapeRenderer();
+        renderer0.setSeriesLinesVisible(0, false); // Hide lines between points
+        plot.setRenderer(0, renderer0);
+        plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(0, Color.black);
+        plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(0, ShapeUtilities.createDiagonalCross(1, 1));
+
+
+        return new ChartPanel(scatterPlot);
     }
 }

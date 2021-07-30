@@ -43,7 +43,7 @@ public class GUI extends JFrame {
     private JButton button3;
     private JButton button4;
     private JCheckBox plotWithYOffsetCheckBox;
-    private JTextField textField1;
+    private JTextField offsetInput;
     private JCheckBox plotPolynomialFitCheckBox;
     private JButton plotGraphsButton;
     private JTextField textField2;
@@ -125,7 +125,18 @@ public class GUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 DataFile fileToPlot = (DataFile) i0List.getSelectedValue();
-                ChartPanel graph = grapher.testGraphCreation(fileToPlot);
+                //ChartPanel graph = grapher.testGraphCreation(fileToPlot);
+                ArrayList<DataFile> filesToPlot = new ArrayList<>();
+                for (int i = 0; i < i0List.getModel().getSize(); i++) {
+                    filesToPlot.add((DataFile) i0List.getModel().getElementAt(i));
+                }
+
+                ChartPanel graph;
+                if (plotWithYOffsetCheckBox.isSelected())
+                    graph = grapher.createOffsetGraph(Integer.parseInt(offsetInput.getText()), filesToPlot);
+                else
+                    graph = grapher.testGraphCreation(fileToPlot);
+
                 JFrame frame = new JFrame("Test");
                 frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 frame.setContentPane(graph);
@@ -362,13 +373,13 @@ public class GUI extends JFrame {
                     return;
                 }
                 DataFile meanFile = dataProcessor.generateMean(type, fileName, header, files.toArray(new DataFile[0]));
-
                 try {
                     fileWriter.writeDataFile(meanFile);
                     String directoryPath = Paths.get(meanFile.getFilePath()).getParent().toString() + System.getProperty("file.separator");
                     fileWriter.writeLstFile(files, fileName, header, directoryPath);
+                    ((DefaultListModel) i0List.getModel()).addElement(meanFile); //Update GUI to include new file
                 } catch (IOException ioe) {
-
+                    JOptionPane.showMessageDialog(new JFrame(), "There was an error writing the file");
                 }
             }
         };
