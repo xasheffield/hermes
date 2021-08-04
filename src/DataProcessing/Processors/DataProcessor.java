@@ -14,6 +14,10 @@ import org.apache.commons.math3.fitting.*;
 
 public class DataProcessor {
 
+    private final String TEXTFILE = ".txt";
+    private final String DATFILE = ".dat";
+    private final String LSTFILE = ".lst";
+
     /**
      * @param files - any number of data files from which to generate the mean
      * @return mean data file generated from inputs
@@ -42,9 +46,7 @@ public class DataProcessor {
             XRaySample meanSample = generateMean(samplesList);
             meanSamples.add(meanSample);
         }
-        File saveDirectory = new File(firstFile.getFilePath()).getParentFile();
-        //TODO dat file
-        String filePath = saveDirectory.getAbsolutePath() + System.getProperty("file.separator") + fileName + ".txt";
+        String filePath = getFilePath(firstFile, fileName, TEXTFILE);
         return new DataFile(dataType, filePath, fileHeader, meanSamples);
     }
 
@@ -68,16 +70,63 @@ public class DataProcessor {
         return new XRaySample(meanEnergy, meanTheta, meanCounts);
     }
 
+    /**
+     * Takes a source DataFile and returns a new DataFile which generates counts
+     * @param sourceFile
+     * @return A DataFile which samples a polynomial to get a val
+     */
+    public DataFile generatePolyFile(DataFile sourceFile, String fileName) {
+        double[] coeff = generatePoly(sourceFile, 3);
+        String polynomialFunction = "f(x) = ";
+        ArrayList<XRaySample> samples = new ArrayList<>();
+
+        for (XRaySample sample: sourceFile.getData()) {
+            Double cnts = 0D;
+            double energy = sample.getEnergy();
+            double theta = sample.getTheta();
+            for (int i = 0; i < coeff.length; i++) { //Sample polynomial to get counts_per_live value
+                cnts+= Math.pow(energy, i) * coeff[i];
+                polynomialFunction += coeff[i] + "*x^" + i + " ";
+            }
+            samples.add(new XRaySample(energy, theta, cnts));
+        }
+
+        MeasurementType type = sourceFile.getDataType();
+        String path = getFilePath(sourceFile, fileName, TEXTFILE);
+        String header = sourceFile.getHeader() + "\n";
+        header += sourceFile.getFileName() + "\n";
+        header += polynomialFunction;
+
+
+
+        DataFile polynomialFile = new DataFile(type, path, header, samples);
+        return polynomialFile;
+    }
+
     //TODO theta or energy against counts? ENERGY
+    /**
+     *
+     * @param file The source file to fit a polynomial to
+     * @param polyDegree The degree of the polynomial to fit to the data
+     * @return An array of coefficients of the polynomial in order of increasing degree, i.e. (a + bx + cx^2 ...) returns [a,b,c]
+     */
     public double[] generatePoly(DataFile file, int polyDegree) {
         final WeightedObservedPoints obs = new WeightedObservedPoints();
         ArrayList<XRaySample> samples = file.getData();
+
+        /* Normalisation testing
+
+         */
+        double firstEnergy = samples.get(0).getEnergy();
+        double firstCnts = samples.get(0).getCnts_per_live();
+
+
         for (int i = 0; i < samples.size(); i++) {
             XRaySample sample = samples.get(i);
             obs.add(sample.getEnergy(), sample.getCnts_per_live());
         }
         // Instantiate a third-degree polynomial fitter.
-        final PolynomialCurveFitter fitter = PolynomialCurveFitter.create(3);
+        final PolynomialCurveFitter fitter = PolynomialCurveFitter.create(polyDegree);
 
         // Retrieve fitted parameters (coefficients of the polynomial function).
         final double[] coeff = fitter.fit(obs.toList());
@@ -87,9 +136,10 @@ public class DataProcessor {
     //TODO theta or energy against counts? ENERGY
     public double[] generatePolyTest() {
         final WeightedObservedPoints obs = new WeightedObservedPoints();
-        for (int i = 1; i < 1000; i++) {
-            obs.add(i, i*i);
+        for (int i = 0; i < 100; i++) {
+            obs.add(i,  Math.pow(i, 6) - Math.pow(i*2, 3) + 80);
         }
+        //DataFile file =
         //ArrayList<XRaySample> samples = file.getData();
         /*
         for (int i = 0; i < samples.size(); i++) {
@@ -99,11 +149,25 @@ public class DataProcessor {
 
          */
         // Instantiate a third-degree polynomial fitter.
-        final PolynomialCurveFitter fitter = PolynomialCurveFitter.create(3);
+        final PolynomialCurveFitter fitter = PolynomialCurveFitter.create(7);
 
         // Retrieve fitted parameters (coefficients of the polynomial function).
         final double[] coeff = fitter.fit(obs.toList());
+        for (Double c: coeff
+             ) {
+            System.out.println(c);
+
+        }
         return coeff;
+    }
+
+    public List<Double> calculatePolynomial (List<Double> inputs, List<Double> coefficients) {
+        for (Double x: inputs) {
+            for (int i = 0; i < coefficients.size(); i++) {
+
+            }
+        }
+        return null;
     }
 
 
@@ -148,9 +212,7 @@ public class DataProcessor {
         //
     }
 
-    //TODO check if this way of validating file ranges is acceptable (possibly able to check if two <Double> ArrayLists are identical?)
     //TODO test
-
     /**
      *
      * @param files
@@ -181,5 +243,18 @@ public class DataProcessor {
              */
         }
         return true;
+    }
+
+    /**
+     * Creates a String path for a file of a given name, in the same directory as a given file
+     * @param sourceFile
+     * @param fileName
+     * @return
+     */
+    private String getFilePath(DataFile sourceFile, String fileName, String fileExtension) {
+        File saveDirectory = new File(sourceFile.getFilePath()).getParentFile();
+        //TODO dat file
+        String filePath = saveDirectory.getAbsolutePath() + System.getProperty("file.separator") + fileName + fileExtension;
+        return filePath;
     }
 }
