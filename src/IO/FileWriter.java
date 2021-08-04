@@ -21,6 +21,8 @@ import java.util.List;
 
 public class FileWriter {
 
+    private final String fileSeparator = new String(new char[27]).replace("\0", "*");
+
     /**
      *
      * @param file The file to write out
@@ -29,10 +31,10 @@ public class FileWriter {
     public void writeDataFile(DataFile file) throws IOException {
         String header = file.getHeader();
         List<String> data = file.getDataAsString();
+        data.add(0, fileSeparator);
         data.add(0, header);
         Path testfile = Paths.get(file.getFilePath());
         Files.write(testfile, data, StandardCharsets.UTF_8);//, StandardOpenOption.APPEND);
-
     }
 
     public void writeLstFile(List<DataFile> files, String fileName, String header, String path) throws IOException {

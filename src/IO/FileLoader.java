@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Scanner;
 
-public class FileLoader {
+public class FileLoader extends AbstractIO {
 
 
     /**
@@ -27,6 +27,7 @@ public class FileLoader {
     int thetaIndex = -1;
     int countsIndex = -1;
     public boolean valuesInitialised = false;
+    String[] columnNames;
 
     public void setEnergyIndex(int energyIndex) {
         this.energyIndex = energyIndex;
@@ -51,7 +52,7 @@ public class FileLoader {
      * @param file
      * @return String array of file names, or empty array if error reading file
      */
-    public String[] getColumnNames(File file) {
+    public String[] parseColumnNames(File file) {
         try {
             Scanner scanner = new Scanner(file);
             while (scanner.hasNextLine()) {
@@ -141,8 +142,9 @@ public class FileLoader {
             //Skip lines until data separator, and then column names
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
-                if (line.contains("*")) {
+                if (line.contains("***")) {
                     scanner.nextLine(); // skip column names line
+                    //TODO janky fix, make it check for numbers
                     break;
                 }
             }
@@ -165,6 +167,16 @@ public class FileLoader {
         }
         return samples;
     }
+
+    public String[] getColumnNames() {
+        return columnNames;
+    }
+
+    public void setColumnNames(String[] columnNames) {
+        this.columnNames = columnNames;
+    }
+
+
 
 
 }

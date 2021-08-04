@@ -41,7 +41,7 @@ class FileLoaderTest {
 
     @Test
     public void testGetColumnNames() {
-        String[] names = fileLoader.getColumnNames(file);
+        String[] names = fileLoader.parseColumnNames(file);
         for (int i = 0; i < names.length; i++) {
             assertEquals(names[i], COLUMNNAMES[i]);
             //System.out.println(names[i]);
