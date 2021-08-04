@@ -21,6 +21,15 @@ public class DataManager {
     public DataManager() {
     }
 
+    //Adds a collection of Data Files to the appropriate array
+    public void addFile(DataFile file, MeasurementType type) {
+        switch (type) {
+            case I0: i0Files.add(file);
+            case I0b: i0bFiles.add(file);
+            case It: itFiles.add(file);
+            case Itb: itbFiles.add(file);
+        }
+    }
 
     //Adds a collection of Data Files to the appropriate array
     public void addFiles(ArrayList<DataFile> files, MeasurementType type) {
