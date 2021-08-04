@@ -5,20 +5,18 @@ import DataProcessing.Processors.DataProcessor;
 import Graphing.Grapher;
 import IO.FileLoader;
 import IO.FileWriter;
-import org.jfree.chart.ChartPanel;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -30,24 +28,17 @@ public class GUI extends JFrame {
     private JLabel image2;
     private JLabel image1;
     private JPanel controlPanel;
-    private JList i0List;
+    private JList i0List; // TODO either format all lists like this, with the title in the border of the JList, or remove for this one
     private JButton loadFilesButton;
     private JButton button2;
 
 
     private JTabbedPane rootTabPane; //Base panel, which encapsulates the rest of the program
     private JButton generateMeanButton;
-    private JPanel plottingPanel;
     private JList plotFileList;
-    private JList list3;
-    private JButton button3;
-    private JButton button4;
     private JCheckBox plotWithYOffsetCheckBox;
     private JTextField offsetInput;
-    private JCheckBox plotPolynomialFitCheckBox;
     private JButton plotGraphsButton;
-    private JTextField textField2;
-    private JTextField textField3;
     private JCheckBox backgroundIsSignificantCheckBox;
     private JButton plotAbsorptionButton;
     private JButton generateAbsorptionFileButton;
@@ -57,10 +48,10 @@ public class GUI extends JFrame {
     private JList itbList;
     private JComboBox dataTypeComboBox;
     private JButton resetPlotFilesButton;
-    private JButton continueButton;
     private JButton resetAllDataButton;
-    private JPanel plotPanel;
     private JButton resetDataButton;
+    private JPanel i0bPlotFiles;
+    private JButton resetDataFormatButton;
 
 
     FileLoader fileLoader;
@@ -76,6 +67,14 @@ public class GUI extends JFrame {
         this.initComponents();
         this.pack();
         this.setContentPane(rootTabPane);
+
+        CheckBoxList test = new CheckBoxList();
+        DefaultListModel model = new DefaultListModel();
+        model.addElement(new JCheckBox("I0UL3Si1266_1_alldata_1.txt"));
+        model.addElement(new JCheckBox("I0UL3Si1266_1_alldata_2.txt"));
+        model.addElement(new JCheckBox("I0UL3Si1266_1_alldata_3.txt"));
+        test.setModel(model);
+        //i0bPlotFiles.add(test);
 
         /**
          * Initialise IO, DataProcessing and Grapher
@@ -121,30 +120,8 @@ public class GUI extends JFrame {
                 */
             }
         });
-        plotGraphsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                DataFile fileToPlot = (DataFile) i0List.getSelectedValue();
-                //ChartPanel graph = grapher.testGraphCreation(fileToPlot);
-                ArrayList<DataFile> filesToPlot = new ArrayList<>();
-                for (int i = 0; i < i0List.getModel().getSize(); i++) {
-                    filesToPlot.add((DataFile) i0List.getModel().getElementAt(i));
-                }
-
-                ChartPanel graph;
-                if (plotWithYOffsetCheckBox.isSelected())
-                    graph = grapher.createOffsetGraph(Integer.parseInt(offsetInput.getText()), filesToPlot);
-                else
-                    graph = grapher.testGraphCreation(fileToPlot);
-
-                JFrame frame = new JFrame("Test");
-                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                frame.setContentPane(graph);
-                frame.pack();
-                frame.setVisible(true);
-                
-            }
-        });
+        plotGraphsButton.addActionListener(plotGraphsListener());
+        /*
         plotFileList.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -155,12 +132,17 @@ public class GUI extends JFrame {
                 }
             }
         });
+        Right click test
+         */
+        /*
         resetPlotFilesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 ((DefaultListModel)plotFileList.getModel()).removeAllElements();
             }
         });
+
+         */
         resetDataButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -184,6 +166,12 @@ public class GUI extends JFrame {
 
                 //JOptionPane.showOptionDialog();
                 //TODO give user way to select files
+            }
+        });
+        resetDataFormatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fileLoader.setValuesInitialised(false);
             }
         });
     }
@@ -317,6 +305,21 @@ public class GUI extends JFrame {
 
                 //If this is the first time loading data, create a window prompting the user to select
                 //which columns correspond to the relevant data, and update FileLoader to save these values
+
+                String[] columnNames = fileLoader.parseColumnNames(filesToLoad[0]);
+                if (!fileLoader.valuesInitialised || !Arrays.equals(columnNames, fileLoader.getColumnNames())) {
+                    if (columnNames.length == 0) {
+                        return;
+                    }
+
+                    //Cancel file generation if user exits column selection popup
+                    if (!columnSelectionDialog(columnNames, fileLoader)) {
+                        return;
+                    }
+                    fileLoader.setColumnNames(columnNames);
+                }
+
+                        /*
                 if (!fileLoader.valuesInitialised) {
                     String[] columnNames = fileLoader.getColumnNames(filesToLoad[0]);
                     if (columnNames.length == 0) {
@@ -328,8 +331,11 @@ public class GUI extends JFrame {
                         return;
                     }
                 }
+
+                         */
+
                 //Get the MeasurementType of files to be loaded from user input
-                MeasurementType fileType = MeasurementType.valueOf((String) dataTypeComboBox.getSelectedItem());
+                MeasurementType fileType = getSelectedType();
 
                 //Load files and store in DataManager
                 ArrayList<DataFile> loadedFiles = fileLoader.loadFiles(fileType, filesToLoad);
@@ -358,28 +364,31 @@ public class GUI extends JFrame {
                 //TODO ask if user wants to use entire energy range
                 //If not, ask user to specify a range (in energy)
 
-                String fileName = JOptionPane.showInputDialog("Enter File Name", "");
-                String header = JOptionPane.showInputDialog("Enter File Header", "");
-
-                //Will be null if user cancelled input dialog, return if so
-                if (fileName == null || header == null) {
-                    JOptionPane.showMessageDialog(new JFrame(), "Action cancelled.");
-                    return;
-                }
-                MeasurementType type = MeasurementType.valueOf((String) dataTypeComboBox.getSelectedItem());
+                MeasurementType type = getSelectedType();
                 List<DataFile> files = getList(type).getSelectedValuesList();
                 if (files.isEmpty()) {
                     JOptionPane.showMessageDialog(new JFrame(), "No data files found of type: " + type.toString());
                     return;
                 }
+
+                String fileName = JOptionPane.showInputDialog("Enter File Name", "");
+                String header = JOptionPane.showInputDialog("Enter File Header", "");
+
+                //Will be null if user cancelled input dialog, return if so
+                if (fileName == null || header == null) {
+                    //JOptionPane.showMessageDialog(new JFrame(), "Action cancelled.");
+                    return;
+                }
+
                 DataFile meanFile = dataProcessor.generateMean(type, fileName, header, files.toArray(new DataFile[0]));
                 try {
                     fileWriter.writeDataFile(meanFile);
                     String directoryPath = Paths.get(meanFile.getFilePath()).getParent().toString() + System.getProperty("file.separator");
                     fileWriter.writeLstFile(files, fileName, header, directoryPath);
-                    ((DefaultListModel) i0List.getModel()).addElement(meanFile); //Update GUI to include new file
+                    dataManager.addFile(meanFile, type);
+                    ((DefaultListModel) getList(type).getModel()).addElement(meanFile); //Update GUI to include new file
                 } catch (IOException ioe) {
-                    JOptionPane.showMessageDialog(new JFrame(), "There was an error writing the file");
+                    JOptionPane.showMessageDialog(new JFrame(), "There was an error writing the file.");
                 }
             }
         };
@@ -393,8 +402,59 @@ public class GUI extends JFrame {
         return new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(new JFrame(), "Something");
+                //double[] coeff = dataProcessor.generatePoly((DataFile) i0List.getSelectedValue(), 3);
+                //TODO option for polynomial degree
+                MeasurementType type = getSelectedType();
+                JList list = getList(type);
+                if (list.getSelectedValuesList().size() != 1) {
+                    JOptionPane.showMessageDialog(new JFrame(), "Please select one " + getSelectedType().toString() + " file.");
+                    return;
+                }
+                DataFile sourceFile = (DataFile) list.getSelectedValue();
+                String fileName = JOptionPane.showInputDialog(new JFrame(), "Enter File Name");
+                DataFile polynomialFile = dataProcessor.generatePolyFile(sourceFile, fileName);
+                try {
+                    //TODO tryWriteDataFile method which handles exception
+                    fileWriter.writeDataFile(polynomialFile);
+                    dataManager.addFile(polynomialFile, type);
+                    ((DefaultListModel) getList(type).getModel()).addElement(polynomialFile);
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                    JOptionPane.showMessageDialog(new JFrame(), "Failed to write file.");
+                }
 
+            }
+        };
+    }
+
+    private ActionListener plotGraphsListener() {
+        return new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JList selected = getList(getSelectedType());
+                int[] selectedIndices = selected.getSelectedIndices();
+                if (selectedIndices.length == 0) {
+                    JOptionPane.showMessageDialog(new JFrame(), "Select " + getSelectedType() + " file(s) to plot");
+                    return;
+                }
+
+                ArrayList<DataFile> filesToPlot = new ArrayList<>();
+                for (int i: selectedIndices) {
+                    filesToPlot.add((DataFile) selected.getModel().getElementAt(i));
+                }
+
+                //Plot data with offset, or on separate axes
+                if (plotWithYOffsetCheckBox.isSelected()) {
+                    try {
+                        int offset = Integer.parseInt(offsetInput.getText());
+                        grapher.displayOffsetGraph(filesToPlot, offset);
+                    } catch (NumberFormatException nfe) {
+                        JOptionPane.showMessageDialog(new JFrame(), "Please enter a valid offset");
+                    }
+                }
+                else {
+                    grapher.displayGraph(filesToPlot);
+                }
             }
         };
     }
@@ -412,5 +472,9 @@ public class GUI extends JFrame {
             case Itb: return itbList;
         }
         return null;
+    }
+
+    private MeasurementType getSelectedType() {
+        return MeasurementType.valueOf((String) dataTypeComboBox.getSelectedItem());
     }
 }

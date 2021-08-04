@@ -26,7 +26,7 @@ public class FileLoadingGUI extends JFrame implements Runnable {
     public FileLoadingGUI(String title, FileLoader fLoader, File[] files) throws HeadlessException {
         super(title);
         this.fileLoader = fLoader;
-        this.initComponents(fLoader.getColumnNames(files[0]));
+        this.initComponents(fLoader.parseColumnNames(files[0]));
         this.setContentPane(rootPanel);
         this.pack();
 
