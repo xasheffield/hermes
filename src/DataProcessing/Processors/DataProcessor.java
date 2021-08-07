@@ -91,7 +91,7 @@ public class DataProcessor {
             samples.add(new XRaySample(energy, theta, cnts));
         }
 
-        MeasurementType type = sourceFile.getDataType();
+        MeasurementType type = sourceFile.getFileType();
         String path = getFilePath(sourceFile, fileName, TEXTFILE);
         String header = sourceFile.getHeader() + "\n";
         header += sourceFile.getFileName() + "\n";
@@ -170,7 +170,6 @@ public class DataProcessor {
         return null;
     }
 
-
     /**
      *
      * @return ArrayList of absorption values
@@ -189,7 +188,34 @@ public class DataProcessor {
         return absorption;
     }
 
-    public List<Double> calculateAbsorption(DataFile i0File, DataFile itFile, DataFile i0bFile, DataFile itbFile) {
+    //TODO smarter way than reusing code
+    public DataFile generateAbsorptionFile(DataFile i0, DataFile it, String header) {
+        if (!checkRanges(i0, it)) {
+            return null;
+        }
+        ArrayList<Double> absorption = calculateAbsorption(i0, it);
+        ArrayList<XRaySample> samples = new ArrayList<>();
+        for (int i = 0; i < i0.getData().size(); i++) {
+            XRaySample source = i0.getData().get(i);
+            samples.add(new XRaySample(source.getEnergy(), source.getTheta(), source.getCnts_per_live(), absorption.get(i)));
+        }
+        return new DataFile(MeasurementType.ABSORPTION, "", header,samples);
+    }
+
+    public DataFile generateAbsorptionFile(DataFile i0, DataFile it, DataFile i0b, DataFile itb, String header) {
+        if (!checkRanges(i0, it, i0b, itb)) {
+            return null;
+        }
+        ArrayList<Double> absorption = calculateAbsorption(i0, it, i0b, itb);
+        ArrayList<XRaySample> samples = new ArrayList<>();
+        for (int i = 0; i < i0.getData().size(); i++) {
+            XRaySample source = i0.getData().get(i);
+            samples.add(new XRaySample(source.getEnergy(), source.getTheta(), source.getCnts_per_live(), absorption.get(i)));
+        }
+        return new DataFile(MeasurementType.ABSORPTION, "", header,samples);
+    }
+
+    public ArrayList<Double> calculateAbsorption(DataFile i0File, DataFile itFile, DataFile i0bFile, DataFile itbFile) {
         //TODO method body
         List<Double> it_counts = itFile.getCounts();
         Iterator<Double> i0 = i0File.getCounts().iterator();
@@ -214,33 +240,21 @@ public class DataProcessor {
 
     //TODO test
     /**
-     *
-     * @param files
-     * @return true if all files are same length, and have same values for first and last energy
+     * Checks that file (energy) ranges match
+     * @param files - to check
+     * @return true if ranges match
      */
     public boolean checkRanges(DataFile... files) {
         if (files.length == 0 || files.length == 1)
             return true;
         List<Double> file0_energy = files[0].getEnergy();
-        int size = file0_energy.size();
-        int lastIndex = file0_energy.size() -1;
-        double energy1 = file0_energy.get(0);
-        double energy2 = file0_energy.get(file0_energy.size()-1);
+        DataFile firstFile = files[0];
 
         for (DataFile file: files) {
-            if (file.getEnergy().size() != size) // Check that data sets are same size
+            if (!file.getEnergy().equals(file0_energy)) {
                 return false;
+            }
 
-            double e1 = file.getEnergy().get(0);
-            double e2 = file.getEnergy().get(lastIndex);
-            if (e1 != energy1 || e2 != energy2) //Check that first and last energy values match
-                return false;
-
-            /*
-                More concise implementation?
-            if (!file.getEnergy().equals(file0_energy])
-                return false;
-             */
         }
         return true;
     }

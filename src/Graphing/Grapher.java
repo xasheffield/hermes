@@ -1,5 +1,6 @@
 package Graphing;
 import DataProcessing.Models.DataFile;
+import DataProcessing.Models.DataType;
 import DataProcessing.Models.XRaySample;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -14,6 +15,7 @@ import org.jfree.util.ShapeUtilities;
 
 import javax.swing.*;
 import java.awt.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class Grapher {
@@ -31,9 +33,11 @@ public class Grapher {
     /**
      * General purpose function for displaying any number of files in seperate plots, in a JFrame
      * @param files The files to plot
+     * @param x
+     * @param y
      * @return
      */
-    public void displayGraph(ArrayList<DataFile> files) {
+    public void displayGraph(ArrayList<DataFile> files, DataType x, DataType y) {
         int plots = files.size(); //Number of plots
         int rows = plots / COLUMNS; //nb Java rounds down in integer division
         if (plots % COLUMNS != 0) //Add another row if there is remainder
@@ -51,47 +55,101 @@ public class Grapher {
         double width = size.getWidth();
         double plotWidth = (width * 0.95) / (double) COLUMNS;
 
-
-
         for (DataFile file: files) {
-
-            ChartPanel graph = createGraph(file);
+            ChartPanel graph = createGraph(file, x, y);
             Dimension graphSize = graph.getPreferredSize();
             graphSize.width = (int) plotWidth;
             graph.setPreferredSize(graphSize);
             subPanel.add(graph);
-
-            //subPanel.add(createGraph(file)); //Plot each data file and add to main panel
         }
-
         JScrollPane scroller = new JScrollPane(subPanel);
         panel.add(scroller, BorderLayout.CENTER);
-
         createWindow(panel);
     }
 
-    public void displayOffsetGraph(ArrayList<DataFile> files, int offset) {
+    /**
+     * Creates a window with a scatter plot for each file or panels provided
+     * @param filesOrPanels - can either take in DataFile or ChartPanels
+     * @param x - data type to plot on x axis, only used when passing DataFiles
+     * @param y - ^
+     */
+    public void plotPanels(ArrayList<?> filesOrPanels, DataType x, DataType y) throws ClassNotFoundException {
+        int plots = filesOrPanels.size(); //Number of plots
+        int rows = plots / COLUMNS; //nb Java rounds down in integer division
+        if (plots % COLUMNS != 0) //Add another row if there is remainder
+            rows++;
+
+        JPanel panel = new JPanel(new BorderLayout());
+        JPanel subPanel = new JPanel(new GridLayout(rows, COLUMNS));
+        subPanel.setBackground(Color.white);
+
+
+        //Divide screen into spaces for each column, taking off 5% of screensize to leave space for
+        // scroll bars and edges to avoid need for a horizontal scrollbar
+        Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
+        double width = size.getWidth();
+        double plotWidth = (width * 0.95) / (double) COLUMNS;
+
+
+        for (Object graph: filesOrPanels) {
+            ChartPanel resized_graph;
+            if (graph instanceof ChartPanel) {
+                resized_graph = (ChartPanel) graph;
+            }
+            else if (graph instanceof DataFile) {
+               resized_graph = createGraph((DataFile) graph, x, y);
+            }
+            else {
+                throw new ClassNotFoundException();
+            }
+            Dimension graphSize = resized_graph.getPreferredSize();
+            graphSize.width = (int) plotWidth;
+            resized_graph.setPreferredSize(graphSize);
+            subPanel.add(resized_graph);
+        }
+
+        /*
+        else if (filesOrPanels.get(0) instanceof  DataFile) {
+            for (Object file : filesOrPanels) {
+                ChartPanel graph = createGraph((DataFile) file, x, y);
+                Dimension graphSize = graph.getPreferredSize();
+                graphSize.width = (int) plotWidth;
+                graph.setPreferredSize(graphSize);
+                subPanel.add(graph);
+            }
+        }
+         */
+        JScrollPane scroller = new JScrollPane(subPanel);
+        panel.add(scroller, BorderLayout.CENTER);
+        createWindow(panel);
+    }
+
+
+
+    /**
+     * Plots a series of files with a provided y axis offset on the one set of axes
+     * @param files The files to plot
+     * @param offset The offset
+     * @param x
+     * @param y
+     */
+    public void displayOffsetGraph(ArrayList<DataFile> files, int offset, DataType x, DataType y) {
         JFrame frame = new JFrame("Plot");
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(createOffsetGraph(files, offset)); //Plot each data file and add to main panel
         createWindow(panel);
     }
 
-
-    public ChartPanel createGraph(DataFile file) {
+    public ChartPanel createGraph(DataFile file, DataType x, DataType y) {
         XYSeriesCollection dataset = new XYSeriesCollection();
         XYSeries series1 = new XYSeries(file.getFileName());
 
-        XYSeries series2 = new XYSeries(file.getFileName()+"2");
-
         for (XRaySample sample: file.getData()) {
-            series1.add(sample.getEnergy(), sample.getCnts_per_live());
-
-
+            series1.add(sample.getData(x), sample.getData(y));
         }
         dataset.addSeries(series1);
 
-        JFreeChart scatterPlot = ChartFactory.createScatterPlot(file.getFileName(), "Energy", "Counts per live", dataset,
+        JFreeChart scatterPlot = ChartFactory.createScatterPlot(file.getFileName(), x.toString(), y.toString(), dataset,
                 PlotOrientation.VERTICAL, false, false, false);
         scatterPlot.setBackgroundPaint(Color.white);
 

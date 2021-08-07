@@ -1,5 +1,7 @@
 package DataProcessing.Models;
 
+import java.util.ArrayList;
+
 /**
  * Represents a single data point from a set
  *
@@ -29,6 +31,13 @@ public class XRaySample {
         this.cnts_per_live = meanCounts;
     }
 
+    public XRaySample(Double meanEnergy, Double meanTheta, Double meanCounts, Double absorption) {
+        this.energy = meanEnergy;
+        this.theta = meanTheta;
+        this.cnts_per_live = meanCounts;
+        this.absorption = absorption;
+    }
+
     /**
      * Converts string representation of exponential number to a double
      * @param number - String in the form: number -> E -> +/- -> number, e.g. 2.612412E+5
@@ -48,6 +57,20 @@ public class XRaySample {
 
     public String getData() {
         return (this.energy + "," + this.theta + "," + this.cnts_per_live + "!");// "!" Divides samples
+    }
+
+    public double getData(DataType type) {
+        switch (type) {
+            case ENERGY:
+            case ENERGY_CORRECTED: //TODO IMPLEMENT
+                return getEnergy();
+            case THETA:
+            case THETA_CORRECTED:
+                return getTheta();
+            case COUNTS_PER_LIVE: return getCnts_per_live();
+            case ABSORPTION: return getAbsorption();
+            default: return 0;
+        }
     }
     public double getEnergy() {
         return energy;

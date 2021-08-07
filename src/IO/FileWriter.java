@@ -1,6 +1,7 @@
 package IO;
 
 import DataProcessing.Models.DataFile;
+import DataProcessing.Models.DataType;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +32,15 @@ public class FileWriter {
     public void writeDataFile(DataFile file) throws IOException {
         String header = file.getHeader();
         List<String> data = file.getDataAsString();
+        data.add(0, fileSeparator);
+        data.add(0, header);
+        Path testfile = Paths.get(file.getFilePath());
+        Files.write(testfile, data, StandardCharsets.UTF_8);//, StandardOpenOption.APPEND);
+    }
+
+    public void writeAbsorptionFile(DataFile file) throws IOException {
+        String header = file.getHeader();
+        List<String> data = file.getDataAsString(DataType.ENERGY, DataType.THETA, DataType.ABSORPTION);
         data.add(0, fileSeparator);
         data.add(0, header);
         Path testfile = Paths.get(file.getFilePath());

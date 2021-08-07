@@ -12,6 +12,7 @@ package DataProcessing.Models;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,13 +21,13 @@ public class DataFile {
 
     //TODO figure out how to deal with corrected theta/energy
 
-    private MeasurementType dataType; // The data type of the file (I0, It, I0b, Itb)
+    private MeasurementType fileType; // The data type of the file (I0, It, I0b, Itb)
     private String filePath; // Path to the file in the user's file system
     private String header; // Header line(s) of file
     private ArrayList<XRaySample> data; // The data contained in the file
 
     public DataFile(MeasurementType dataType, String filePath, String fileHeader, ArrayList<XRaySample> data) {
-        this.dataType = dataType;
+        this.fileType = dataType;
         this.filePath = filePath;
         this.header = fileHeader;
         this.data = data;
@@ -35,8 +36,8 @@ public class DataFile {
     /**
      * Getters and setters
      */
-    public MeasurementType getDataType() {
-        return dataType;
+    public MeasurementType getFileType() {
+        return fileType;
     }
 
     public String getFilePath() {
@@ -57,6 +58,29 @@ public class DataFile {
             stringData.add("Energy(ev)\tTheta\tcnts_per_live");
             stringData.addAll(data.stream().map(x -> x.getEnergy() + "\t" + x.getTheta() +
                     "\t" + x.getCnts_per_live() + "\t").collect(Collectors.toList()));
+        return stringData;
+    }
+    /**
+     *
+     * @return The data contained in the sample as a string, in order Energy, Theta, Cnts_per_live
+     */
+    public List<String> getDataAsString(DataType... types) {
+
+        List<String> stringData = new LinkedList<>();
+
+        //Create line containing column names
+        List<DataType> dataTypes = Arrays.asList(types);
+        String columnNames = dataTypes.stream().map(x -> x.label).collect(Collectors.joining("\t "));
+        stringData.add(columnNames);
+
+        //Add data line by line
+        for (XRaySample sample: getData()) {
+            String line = "";
+            for (DataType type: types) {
+                line += (sample.getData(type) + "\t");
+            }
+            stringData.add(line);
+        }
         return stringData;
     }
 
@@ -81,8 +105,7 @@ public class DataFile {
     }
 
     /**
-     *
-     * @return A collection of all the measurements of theta in the data file
+     * @return A collection of all the measurements of cnts_per_live in the data file
      */
     public List<Double> getCounts() {
         ArrayList<XRaySample> data = this.getData();
@@ -90,7 +113,28 @@ public class DataFile {
         return counts;
     }
 
+    /**
+     * @return A collection of all the values of absorption in the data file
+     */
+    public List<Double> getAbsorption() {
+        ArrayList<XRaySample> data = this.getData();
+        List<Double> absorption = data.stream().map(x -> x.getAbsorption()).collect(Collectors.toList());
+        return absorption;
+    }
 
+    public List<Double> getData(DataType type) {
+        switch (type) {
+            case ENERGY:
+            case ENERGY_CORRECTED: //TODO IMPLEMENT
+                return getEnergy();
+            case THETA:
+            case THETA_CORRECTED:
+                return getTheta();
+            case COUNTS_PER_LIVE: return getCounts();
+            case ABSORPTION: return getAbsorption();
+            default: return new ArrayList<Double>();
+        }
+    }
 
     public String getHeader() {
         return header;
@@ -104,5 +148,12 @@ public class DataFile {
     @Override
     public String toString() {
         return getFileName();
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public void setName(String name) {
     }
 }

@@ -21,7 +21,7 @@ public class DataManager {
     public DataManager() {
     }
 
-    //Adds a collection of Data Files to the appropriate array
+    //Adds a  Data File to the appropriate array
     public void addFile(DataFile file, MeasurementType type) {
         switch (type) {
             case I0: i0Files.add(file);
@@ -40,7 +40,6 @@ public class DataManager {
             case Itb: itbFiles.addAll(files);
         }
     }
-
 
     /**
      * Gets a list of Data File names of the given type
@@ -61,5 +60,15 @@ public class DataManager {
         ArrayList<String> fileNames = (ArrayList<String>) files.stream().map(
                                     datafile -> datafile.getFileName()).collect(Collectors.toList());
         return fileNames; //Passing 0 size array causes it to create new array
+    }
+
+    /**
+     * Clears all currently loaded files
+     */
+    public void  clearFiles() {
+        i0Files.clear();
+        i0bFiles.clear();
+        itFiles.clear();
+        itbFiles.clear();
     }
 }

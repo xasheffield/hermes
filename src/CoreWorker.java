@@ -75,6 +75,7 @@ public class CoreWorker {
         printMemoryUsage();
     }
 
+
     //Process args and fetch requested data set
     private static HashMap<File, LinkedList> processArgs(String[] args, FileInput files) {
         try {
@@ -98,7 +99,7 @@ public class CoreWorker {
      * Cross-platform compatibility
      */
     //Needed to properly format file paths
-    private static boolean isWindows(){
+    public static boolean isWindows(){
         return System.getProperty("os.name").startsWith("Windows");
     }
 
