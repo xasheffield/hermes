@@ -70,7 +70,7 @@ public class DataFile {
 
         //Create line containing column names
         List<DataType> dataTypes = Arrays.asList(types);
-        String columnNames = dataTypes.stream().map(x -> x.label).collect(Collectors.joining("\t "));
+        String columnNames = dataTypes.stream().map(x -> x.label).collect(Collectors.joining("\t ")) + "\t"; //Split column names with tabs
         stringData.add(columnNames);
 
         //Add data line by line

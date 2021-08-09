@@ -139,9 +139,21 @@ public class GUI extends JFrame {
                     //File[] saveDirectory = openFileChooser(false, true, false);
                     File file = saveDialogue();
                     absorptionFile.setFilePath(file.getAbsolutePath());
-                    //absorptionFile.setFilePath(saveDirectory.getAbsolutePath());
-                    fileWriter.writeAbsorptionFile(absorptionFile);
 
+                    //fileWriter.writeAbsorptionFile(absorptionFile);
+
+                    DataFile i0 = (DataFile) absorptioni0List.getSelectedValue();
+                    DataFile it = (DataFile) absorptionitList.getSelectedValue();
+                    System.out.println(i0);
+
+                    if (backgroundIsSignificantCheckBox.isSelected()) {
+                        DataFile i0b = (DataFile) absorptioni0bList.getSelectedValue();
+                        DataFile itb = (DataFile) absorptionitbList.getSelectedValue();
+                        fileWriter.writeAbsorptionFile(absorptionFile, i0, it, i0b, itb);
+                    }
+                    else
+                        fileWriter.writeAbsorptionFile(absorptionFile, i0, it);
+                    //TODO lst file
                     /*
                     fileWriter.writeDataFile(meanFile);
                     String directoryPath = Paths.get(meanFile.getFilePath()).getParent().toString() + System.getProperty("file.separator");
@@ -526,11 +538,24 @@ public class GUI extends JFrame {
         };
     }
 
+    /**
+     * Returns a
+     * @return
+     */
     private DataFile getAbsorptionFile() {
+        absorptioni0bList.isSelectionEmpty();
+        if (absorptioni0List.isSelectionEmpty() || absorptionitList.isSelectionEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please select one i0 and one it file");
+            return null;
+        }
         DataFile i0 = (DataFile) absorptioni0List.getSelectedValue();
         DataFile it = (DataFile) absorptionitList.getSelectedValue();
         DataFile absorptionFile;
         if (backgroundIsSignificantCheckBox.isSelected()) {
+            if (absorptioni0List.isSelectionEmpty() || absorptionitList.isSelectionEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please select one i0, one it, one i0b and one itb file");
+                return null;
+            }
             DataFile i0b = (DataFile) absorptioni0bList.getSelectedValue();
             DataFile itb = (DataFile) absorptionitbList.getSelectedValue();
             absorptionFile = dataProcessor.generateAbsorptionFile(i0, it, "");
