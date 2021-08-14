@@ -33,7 +33,6 @@ public class GUI extends JFrame {
     private JLabel image1;
     private JPanel controlPanel;
     private JButton loadFilesButton;
-    private JButton button2;
 
 
     private JTabbedPane rootTabPane; //Base panel, which encapsulates the rest of the program
@@ -65,6 +64,8 @@ public class GUI extends JFrame {
     private JScrollPane absitPane;
     private JScrollPane absitbPane;
     private JScrollPane absi0bPane;
+    private JList correctionFilesList;
+    private JButton correctScalesButton;
     private DefaultListModel i0Model = (DefaultListModel) i0List.getModel();
     private DefaultListModel i0bModel = (DefaultListModel) i0bList.getModel();
     private DefaultListModel itModel = (DefaultListModel) itList.getModel();
@@ -95,31 +96,48 @@ public class GUI extends JFrame {
         dataProcessor = new DataProcessor();
         grapher = new Grapher();
 
+        addActionListeners();
+    }
 
-        /*
-        plotFileList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if ( SwingUtilities.isRightMouseButton(e) )
-                {
-                    System.out.println("Right click");
-
-                }
-            }
-        });
-        Right click test
-         */
-        /*
-        resetPlotFilesButton.addActionListener(new ActionListener() {
+    private ActionListener correctScaleListener() {
+        return new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                ((DefaultListModel)plotFileList.getModel()).removeAllElements();
-            }
-        });
+                //TODO finish
 
-         */
-        addActionListeners();
-        generateAbsorptionFileButton.addActionListener(generateAbsFileListener());
+                ArrayList<DataFile> files = new ArrayList<>();
+                Object[] filesArr = ((DefaultListModel) correctionFilesList.getModel()).toArray();
+                JOptionPane.showInputDialog(new JFrame(), "Choose a file to define define characteristic monochromator energy (Emono)");
+                DataFile file = null; //File which defines Emono TODO get from user input
+                double energyMin = file.getEnergy().get(0);
+                double thetaMin = file.getTheta().get(0);
+                int result = JOptionPane.showConfirmDialog(new JFrame(), "Energy: " + energyMin + "\n Theta: " + thetaMin);
+                if (result != JOptionPane.YES_OPTION) {
+                    return; //Cancel correction if user is not happy with theta and energy values
+                }
+
+                double emono = energyMin * Math.sin(thetaMin);
+                JOptionPane.showMessageDialog(new JFrame(), "Emono: " + emono);
+                double eObserved = -1;
+                double eTrue = -1;
+                while (eObserved == -1 || eTrue == -1)  {
+                    try {
+                        String energyObserved = JOptionPane.showInputDialog(new JFrame(), "Enter observed energy");
+                        eObserved = Double.parseDouble(energyObserved);
+                        String energyTrue = JOptionPane.showInputDialog(new JFrame(), "Enter true energy");
+                        eTrue = Double.parseDouble(energyTrue);
+                    } catch (NumberFormatException nfe) {
+                        JOptionPane.showMessageDialog(new JFrame(), "Please enter a valid value");
+                    }
+                }
+                double thetaObserved = Math.asin(emono / eObserved);
+                double thetaTrue = Math.asin(emono / eTrue);
+                double thetaShift = thetaObserved - thetaTrue; //TODO which way round is this?
+
+
+
+            }
+        };
     }
 
     private ActionListener generateAbsFileListener() {
@@ -131,36 +149,34 @@ public class GUI extends JFrame {
                 if (header == null) {
                     return;
                 }
-                //dataManager.addFile(meanFile, type);
                 DataFile absorptionFile = getAbsorptionFile();
-
+                if (absorptionFile == null)
+                    return;
+                absorptionFile.setHeader(header);
                 try {
                     //TODO implement file writing
                     //File[] saveDirectory = openFileChooser(false, true, false);
                     File file = saveDialogue();
                     absorptionFile.setFilePath(file.getAbsolutePath());
 
-                    //fileWriter.writeAbsorptionFile(absorptionFile);
-
+                    ArrayList<DataFile> sourceFiles = new ArrayList<>();
                     DataFile i0 = (DataFile) absorptioni0List.getSelectedValue();
                     DataFile it = (DataFile) absorptionitList.getSelectedValue();
-                    System.out.println(i0);
+                    sourceFiles.add(i0); sourceFiles.add(it);
 
                     if (backgroundIsSignificantCheckBox.isSelected()) {
                         DataFile i0b = (DataFile) absorptioni0bList.getSelectedValue();
                         DataFile itb = (DataFile) absorptionitbList.getSelectedValue();
+                        sourceFiles.add(i0b); sourceFiles.add(itb);
                         fileWriter.writeAbsorptionFile(absorptionFile, i0, it, i0b, itb);
                     }
                     else
                         fileWriter.writeAbsorptionFile(absorptionFile, i0, it);
                     //TODO lst file
-                    /*
-                    fileWriter.writeDataFile(meanFile);
-                    String directoryPath = Paths.get(meanFile.getFilePath()).getParent().toString() + System.getProperty("file.separator");
-                    fileWriter.writeLstFile(files, fileName, header, directoryPath);
-                    dataManager.addFile(meanFile, type);
-                    ((DefaultListModel) getList(type).getModel()).addElement(meanFile); //Update GUI to include new file
-                    */
+                    dataManager.addFile(absorptionFile, MeasurementType.ABSORPTION);
+                    String directoryPath = Paths.get(absorptionFile.getFilePath()).getParent().toString() + System.getProperty("file.separator");
+                    fileWriter.writeLstFile(sourceFiles, file.getName(), header, directoryPath);
+                    JOptionPane.showMessageDialog(new JFrame(), ".dat and .lst files have been succesfully saved to " + absorptionFile.getFilePath());
                 } catch (Exception ioException) {
                     ioException.printStackTrace();
                 }
@@ -185,19 +201,13 @@ public class GUI extends JFrame {
 
         resetDataButton.addActionListener(resetDataListener());
         plotAbsorptionButton.addActionListener(plotAbsorptionListener());
-        resetDataFormatButton.addActionListener(e -> fileLoader.setValuesInitialised(false));
         rootTabPane.addComponentListener(new ComponentAdapter() {
         });
-        rootTabPane.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                pack();
-            }
-        });
+        rootTabPane.addChangeListener(changeTabListener());
         backgroundIsSignificantCheckBox.addActionListener(bgAbsorptionListener());
+        generateAbsorptionFileButton.addActionListener(generateAbsFileListener());
+        correctScalesButton.addActionListener(correctScaleListener());
     }
-
-
 
     /**
      * Sets the file lists in the absorption tab to share models with the lists in data input tab
@@ -210,7 +220,7 @@ public class GUI extends JFrame {
     }
 
     /**
-     * A pop-up dialog which prompts users to input correct columns to use
+     * A pop-up dialog which prompts users to input correct columns to use (energy, theta, and counts)
      * @param columnNames - The names of columns in the data
      * @param fl - FileLoader, in order to set the column indeces
      */
@@ -299,39 +309,18 @@ public class GUI extends JFrame {
         return new File[0];
     }
 
-    private void addImages(){
-        try {
-            BufferedImage myPicture = ImageIO.read(new File("/Users/Marco/Desktop/graph1.png"));
-            JLabel picLabel = new JLabel(new ImageIcon(myPicture));
-            image1Panel.add(picLabel);
-
-            myPicture = ImageIO.read(new File("/Users/Marco/Desktop/graph2.png"));
-            picLabel = new JLabel(new ImageIcon(myPicture));
-            image2 = picLabel;
-
-            SwingUtilities.updateComponentTreeUI(this);
-        } catch (IOException e) {
-            System.out.println("File was unable to be read");
-        }
-    }
-
     private void createUIComponents() {
         // TODO: place custom component creation code here
-            /*
-            BufferedImage image1 = ImageIO.read(new File("/Users/Marco/Desktop/graph1.png"));
-            JLabel picLabel = new JLabel(new ImageIcon(image1));
-            this.image1 = picLabel; */
-            this.image1 = new JLabel();
-
-
-            /*
-            BufferedImage image2 = ImageIO.read(new File("/Users/Marco/Desktop/graph2.png"));
-            picLabel = new JLabel(new ImageIcon(image2));
-            this.image2 = picLabel;
-             */
-            this.image2 = new JLabel();
     }
 
+    private ChangeListener changeTabListener() {
+        return new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                pack();
+            }
+        };
+    }
 
     private ActionListener loadFilesActionListener() {
         return new ActionListener() {
@@ -367,7 +356,6 @@ public class GUI extends JFrame {
                 ArrayList<DataFile> loadedFiles = fileLoader.loadFiles(fileType, filesToLoad);
                 if (!dataProcessor.checkRanges(loadedFiles.toArray(new DataFile[0]))) {
                     JOptionPane.showMessageDialog(new JFrame(), "File ranges do not match.");
-                    //TODO truncate files to certain energy range
                 }
                 dataManager.addFiles(loadedFiles, fileType);
 
@@ -383,19 +371,18 @@ public class GUI extends JFrame {
     }
 
     /**
-     * Adds functionality to generate mean button. Creates a pop-up dialogue prompting
-     * user to name the file and provide a header.
+     * Adds functionality to generate data merge button. Creates a pop-up dialogue prompting
+     * user to name the file and provide a header, truncates files if necessary, and generates a mean file
+     * from the selected files.
      * @return
      */
     private ActionListener generateMeanActionListener() {
         return new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //TODO ask if user wants to use entire energy range
-                //If not, ask user to specify a range (in energy)
-
                 MeasurementType type = getSelectedType();
                 List<DataFile> files = getList(type).getSelectedValuesList();
+                DataFile[] filesArr = files.toArray(new DataFile[0]);
                 if (files.isEmpty()) {
                     JOptionPane.showMessageDialog(new JFrame(), "No data files found of type: " + type.toString());
                     return;
@@ -403,13 +390,14 @@ public class GUI extends JFrame {
 
                 String fileName = JOptionPane.showInputDialog("Enter File Name", "");
                 String header = JOptionPane.showInputDialog("Enter File Header", "");
-
                 //Will be null if user cancelled input dialog, return if so
                 if (fileName == null || header == null) {
                     //JOptionPane.showMessageDialog(new JFrame(), "Action cancelled.");
                     return;
                 }
 
+
+                dataProcessor.truncateIfNeeded(files);
                 DataFile meanFile = dataProcessor.generateMean(type, fileName, header, files.toArray(new DataFile[0]));
                 try {
                     fileWriter.writeDataFile(meanFile);
@@ -479,7 +467,7 @@ public class GUI extends JFrame {
                         int offset = Integer.parseInt(offsetInput.getText());
                         grapher.displayOffsetGraph(filesToPlot, offset, DataType.ENERGY, DataType.COUNTS_PER_LIVE);
                     } catch (NumberFormatException nfe) {
-                        JOptionPane.showMessageDialog(new JFrame(), "Please enter a valid offset");
+                        JOptionPane.showMessageDialog(new JFrame(), "Please enter a valid (integer) offset");
                     }
                 }
                 else {
@@ -512,16 +500,17 @@ public class GUI extends JFrame {
         };
     }
 
+    /**
+     * Create two plots, Theta vs Absorption and Energy vs Absorption from user selected files
+     * @return
+     */
     private ActionListener plotAbsorptionListener() {
         return new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 DataFile absorptionFile = getAbsorptionFile();
-                ArrayList<DataFile> wrapper = new ArrayList<>();
-                wrapper.add(absorptionFile);
-                grapher.displayGraph(wrapper, DataType.ENERGY, DataType.ABSORPTION);
-                grapher.displayGraph(wrapper, DataType.THETA, DataType.ABSORPTION);
-
+                if (absorptionFile == null)
+                    return;
 
                 ChartPanel energy = grapher.createGraph(absorptionFile, DataType.ENERGY, DataType.ABSORPTION);
                 ChartPanel theta = grapher.createGraph(absorptionFile, DataType.THETA, DataType.ABSORPTION);
@@ -531,7 +520,7 @@ public class GUI extends JFrame {
                     grapher.plotPanels(graphs, null, null);
                 } catch (ClassNotFoundException classNotFoundException) {
                     classNotFoundException.printStackTrace();
-                    JOptionPane.showMessageDialog(new JFrame(), "You fucked up.");
+                    //JOptionPane.showMessageDialog(new JFrame(), "");
                 }
 
             }
@@ -543,22 +532,22 @@ public class GUI extends JFrame {
      * @return
      */
     private DataFile getAbsorptionFile() {
-        absorptioni0bList.isSelectionEmpty();
-        if (absorptioni0List.isSelectionEmpty() || absorptionitList.isSelectionEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please select one i0 and one it file");
+        boolean background = backgroundIsSignificantCheckBox.isSelected(); //Whether to include background correction (i.e use i0b/itb files)
+        boolean validSelection = checkAbsSelection(background); // Check if selected files are valid
+        if (!validSelection) {
+            if (!background)
+                JOptionPane.showMessageDialog(this, "Please select one i0 and one it file");
+            else
+                JOptionPane.showMessageDialog(this, "Please select one i0, one it, one i0b and one itb file");
             return null;
         }
         DataFile i0 = (DataFile) absorptioni0List.getSelectedValue();
         DataFile it = (DataFile) absorptionitList.getSelectedValue();
         DataFile absorptionFile;
-        if (backgroundIsSignificantCheckBox.isSelected()) {
-            if (absorptioni0List.isSelectionEmpty() || absorptionitList.isSelectionEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please select one i0, one it, one i0b and one itb file");
-                return null;
-            }
+        if (background) {
             DataFile i0b = (DataFile) absorptioni0bList.getSelectedValue();
             DataFile itb = (DataFile) absorptionitbList.getSelectedValue();
-            absorptionFile = dataProcessor.generateAbsorptionFile(i0, it, "");
+            absorptionFile = dataProcessor.generateAbsorptionFile(i0, it, i0b, itb, "");
         }
         else {
             absorptionFile = dataProcessor.generateAbsorptionFile(i0, it, "");
@@ -567,7 +556,27 @@ public class GUI extends JFrame {
     }
 
     /**
-     * Resets
+     * When calculating or plotting absorption, checks that the user selected files are a valid combination.
+     * @param background Whether background readings are being used for for absorption
+     * @return
+     */
+    private boolean checkAbsSelection(boolean background) {
+        if (!background && (absorptioni0List.isSelectionEmpty() || absorptionitList.isSelectionEmpty())) {
+            JOptionPane.showMessageDialog(this, "Please select one i0 and one it file");
+            return false;
+        }
+        if (backgroundIsSignificantCheckBox.isSelected()) {
+            if (absorptioni0List.isSelectionEmpty() || absorptioni0bList.isSelectionEmpty() ||
+                    absorptionitList.isSelectionEmpty() || absorptionitbList.isSelectionEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please select one i0, one it, one i0b and one itb file");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Resets data in the selected file workspace in the first tab
      * @return
      */
     private ActionListener resetDataListener() {
