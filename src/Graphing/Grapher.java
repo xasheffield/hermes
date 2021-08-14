@@ -136,7 +136,7 @@ public class Grapher {
     public void displayOffsetGraph(ArrayList<DataFile> files, int offset, DataType x, DataType y) {
         JFrame frame = new JFrame("Plot");
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(createOffsetGraph(files, offset)); //Plot each data file and add to main panel
+        panel.add(createOffsetGraph(files, offset, x, y)); //Plot each data file and add to main panel
         createWindow(panel);
     }
 
@@ -149,7 +149,7 @@ public class Grapher {
         }
         dataset.addSeries(series1);
 
-        JFreeChart scatterPlot = ChartFactory.createScatterPlot(file.getFileName(), x.toString(), y.toString(), dataset,
+        JFreeChart scatterPlot = ChartFactory.createScatterPlot(file.getFileName(), x.label, y.label, dataset,
                 PlotOrientation.VERTICAL, false, false, false);
         scatterPlot.setBackgroundPaint(Color.white);
 
@@ -164,7 +164,7 @@ public class Grapher {
         return new ChartPanel(scatterPlot);
     }
 
-    public ChartPanel createOffsetGraph(ArrayList<DataFile> files, int offset) {
+    public ChartPanel createOffsetGraph(ArrayList<DataFile> files, int offset, DataType x, DataType y) {
         XYSeriesCollection dataset = new XYSeriesCollection();
         ArrayList<XYSeries> seriesList = new ArrayList<>();
         int i = 0;//Counter for offset on each dataset
@@ -181,7 +181,7 @@ public class Grapher {
             dataset.addSeries(series);
         }
 
-        JFreeChart scatterPlot = ChartFactory.createScatterPlot("Energy vs Counts", "Energy", "Counts per live", dataset,
+        JFreeChart scatterPlot = ChartFactory.createScatterPlot("", x.label, y.label, dataset,
                 PlotOrientation.VERTICAL, true, false, false);
         scatterPlot.setBackgroundPaint(Color.white);
 
