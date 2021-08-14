@@ -55,7 +55,7 @@ public class DataFile {
     public List<String> getDataAsString() {
         //TODO design choice whether to duplicate and overload method for absorption, or add parameter
         List<String> stringData = new LinkedList<>();
-            stringData.add("Energy(ev)\tTheta\tcnts_per_live");
+            stringData.add("Energy (ev)\tTheta (deg)\tcnts_per_live");
             stringData.addAll(data.stream().map(x -> x.getEnergy() + "\t" + x.getTheta() +
                     "\t" + x.getCnts_per_live() + "\t").collect(Collectors.toList()));
         return stringData;
@@ -152,6 +152,10 @@ public class DataFile {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public void setHeader(String header) {
+        this.header = header;
     }
 
     public void setName(String name) {
