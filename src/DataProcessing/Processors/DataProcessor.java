@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.math3.fitting.*;
 
+import javax.swing.*;
+
 public class DataProcessor {
 
     private final String TEXTFILE = ".txt";
@@ -32,10 +34,6 @@ public class DataProcessor {
         //TODO Better way of iterating through samples
         DataFile firstFile = files[0];
         int sampleNumber = firstFile.getData().size();
-        double energy = 0;
-        double theta = 0;
-        double counts = 0;
-
 
         ArrayList<XRaySample> meanSamples = new ArrayList<>();
         for (int i = 0; i <sampleNumber; i++) {
@@ -56,9 +54,10 @@ public class DataProcessor {
      * @return Mean sample
      */
     public XRaySample generateMean(ArrayList<XRaySample> samples) {
-        //TODO create test
+        //TODO data ranges problem
 
         double sampleNumber = samples.size();
+
         ArrayList<Double> energy = (ArrayList<Double>) samples.stream().map(x -> x.getEnergy()).collect(Collectors.toList());
         ArrayList<Double> theta = (ArrayList<Double>) samples.stream().map(x -> x.getTheta()).collect(Collectors.toList());
         ArrayList<Double> counts = (ArrayList<Double>) samples.stream().map(x -> x.getCnts_per_live()).collect(Collectors.toList());
@@ -77,16 +76,17 @@ public class DataProcessor {
      */
     public DataFile generatePolyFile(DataFile sourceFile, String fileName) {
         double[] coeff = generatePoly(sourceFile, 3);
-        String polynomialFunction = "f(x) = ";
-        ArrayList<XRaySample> samples = new ArrayList<>();
+        String polynomialFunction = "f(x) = "; //String repesentation of polynomial function
+        for (int i = 0; i < coeff.length; i++)
+            polynomialFunction += coeff[i] + "*x^" + i + " "; //TODO test
 
+        ArrayList<XRaySample> samples = new ArrayList<>();
         for (XRaySample sample: sourceFile.getData()) {
             Double cnts = 0D;
             double energy = sample.getEnergy();
             double theta = sample.getTheta();
             for (int i = 0; i < coeff.length; i++) { //Sample polynomial to get counts_per_live value
                 cnts+= Math.pow(energy, i) * coeff[i];
-                polynomialFunction += coeff[i] + "*x^" + i + " ";
             }
             samples.add(new XRaySample(energy, theta, cnts));
         }
@@ -238,7 +238,6 @@ public class DataProcessor {
         //
     }
 
-    //TODO test
     /**
      * Checks that file (energy) ranges match
      * @param files - to check
@@ -260,6 +259,46 @@ public class DataProcessor {
     }
 
     /**
+     * For a list of files, returns versions for which the data is truncated such that only samples
+     * with energy values present in all files remain.
+     * @param files Input DataFiles
+     * @return
+     */
+    public List<DataFile> correctRanges(DataFile... files) {
+        double energyMin = 0; // The largest lower bound of energy among the files
+        double energyMax = Double.MAX_VALUE; // The smallest upper bound of energy among the files
+        ArrayList<DataFile> truncatedFiles = new ArrayList<>(); // List to store truncated files
+
+        // Finds the smallest range appearing in the files
+        for (DataFile file: files) {
+            List<Double> energy = file.getEnergy();
+            double lowerEnergy = energy.get(0);
+            double upperEnergy = energy.get(energy.size() - 1);
+
+            energyMin = Math.max(lowerEnergy, energyMin);
+            energyMax = Math.min(upperEnergy, energyMax);
+
+        }
+        //TODO test
+
+        //Copies the files, removing the measurements outside the minimum range
+        for (DataFile file: files) {
+            ArrayList<XRaySample> samples = new ArrayList<>();
+            for (XRaySample sample: file.getData()) {
+                if (sample.getEnergy() >= energyMin && sample.getEnergy() <= energyMax)
+                    samples.add(sample);
+            }
+            DataFile truncatedFile = new DataFile(file.getFileType(), file.getFilePath(),
+                    file.getHeader(), samples);
+            truncatedFiles.add(truncatedFile);
+        }
+
+
+        return truncatedFiles;
+    }
+
+
+    /**
      * Creates a String path for a file of a given name, in the same directory as a given file
      * @param sourceFile
      * @param fileName
@@ -268,7 +307,17 @@ public class DataProcessor {
     private String getFilePath(DataFile sourceFile, String fileName, String fileExtension) {
         File saveDirectory = new File(sourceFile.getFilePath()).getParentFile();
         //TODO dat file
-        String filePath = saveDirectory.getAbsolutePath() + System.getProperty("file.separator") + fileName + fileExtension;
+        String filePath = saveDirectory.getAbsolutePath() + System.getProperty("file.separator") + fileName;// + fileExtension;
         return filePath;
+    }
+
+
+    public List<DataFile> truncateIfNeeded(List<DataFile> files) {
+        DataFile[] filesArr = files.toArray(new DataFile[0]);
+        if (!checkRanges(filesArr)) {
+            files = correctRanges(filesArr);
+            JOptionPane.showMessageDialog(new JFrame(), "File ranges do not match, using the smallest range present in all files.");
+        }
+        return files;
     }
 }
