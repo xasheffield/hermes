@@ -24,14 +24,13 @@ public class FileWriter {
     /**
      *
      * @param file The file to write out
-     * @param file The DataFile to be written
      */
     public void writeDataFile(DataFile file) throws IOException {
         String header = file.getHeader();
         List<String> data = file.getDataAsString();
         data.add(0, fileSeparator);
         data.add(0, header);
-        Path testfile = Paths.get(file.getFilePath());
+        Path testfile = Paths.get(file.getFilePath() + ".dat");
         Files.write(testfile, data, StandardCharsets.UTF_8);//, StandardOpenOption.APPEND);
     }
 
@@ -40,7 +39,7 @@ public class FileWriter {
         List<String> data = file.getDataAsString(DataType.ENERGY, DataType.THETA, DataType.ABSORPTION);
         data.add(0, fileSeparator);
         data.add(0, header);
-        Path testfile = Paths.get(file.getFilePath());
+        Path testfile = Paths.get(file.getFilePath() + ".dat");
         Files.write(testfile, data, StandardCharsets.UTF_8);//, StandardOpenOption.APPEND);
     }
 
@@ -62,7 +61,7 @@ public class FileWriter {
         data.add(0, columnNames);
         data.add(0, fileSeparator);
         data.add(0, header);
-        Path testfile = Paths.get(absorption.getFilePath());
+        Path testfile = Paths.get(absorption.getFilePath() + ".dat");
         Files.write(testfile, data, StandardCharsets.UTF_8);//, StandardOpenOption.APPEND);
     }
 
@@ -91,7 +90,7 @@ public class FileWriter {
         data.add(0, columnNames);
         data.add(0, fileSeparator);
         data.add(0, header);
-        Path testfile = Paths.get(absorption.getFilePath());
+        Path testfile = Paths.get(absorption.getFilePath() + ".dat");
         Files.write(testfile, data, StandardCharsets.UTF_8);//, StandardOpenOption.APPEND);
     }
 
