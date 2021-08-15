@@ -1,8 +1,8 @@
-package DataProcessing.Processors;
+package Data.Processors;
 
-import DataProcessing.Models.DataFile;
-import DataProcessing.Models.MeasurementType;
-import DataProcessing.Models.XRaySample;
+import Data.Models.DataFile;
+import Data.Models.MeasurementType;
+import Data.Models.XRaySample;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -21,6 +21,10 @@ public class DataProcessor {
     private final String LSTFILE = ".lst";
 
     /**
+     *
+     * @param dataType - Type of file (I0, It, Itb, I0b)
+     * @param fileName name of file (including extension)
+     * @param fileHeader - Header of mean file
      * @param files - any number of data files from which to generate the mean
      * @return mean data file generated from inputs
      */

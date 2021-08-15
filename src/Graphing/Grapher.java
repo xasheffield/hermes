@@ -1,7 +1,7 @@
 package Graphing;
-import DataProcessing.Models.DataFile;
-import DataProcessing.Models.DataType;
-import DataProcessing.Models.XRaySample;
+import Data.Models.DataFile;
+import Data.Models.DataType;
+import Data.Models.XRaySample;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -15,7 +15,6 @@ import org.jfree.util.ShapeUtilities;
 
 import javax.swing.*;
 import java.awt.*;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class Grapher {

@@ -7,7 +7,7 @@
  * @author Marco Seddon-Ferretti
  */
 
-package DataProcessing.Models;
+package Data.Models;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,8 +48,9 @@ public class DataFile {
         return data;
     }
 
+    @Deprecated
     /**
-     *
+     * @deprecated Should be replaced with getDataAsString(DataType... types) in all instances
      * @return The data contained in the sample as a string, in order Energy, Theta, Cnts_per_live
      */
     public List<String> getDataAsString() {
@@ -60,9 +61,12 @@ public class DataFile {
                     "\t" + x.getCnts_per_live() + "\t").collect(Collectors.toList()));
         return stringData;
     }
+
     /**
-     *
-     * @return The data contained in the sample as a string, in order Energy, Theta, Cnts_per_live
+     * Returns a string representation of the data in a file, of given types (one Sample of data = 1 line), with
+     * column headers. Used when writing out .dat files.
+     * @param types The DataType(s) to extract from the file
+     * @return A string representation of the data, in the form: (column headers, line1, line2... lineN)
      */
     public List<String> getDataAsString(DataType... types) {
 

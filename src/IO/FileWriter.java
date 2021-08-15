@@ -1,15 +1,13 @@
 package IO;
 
-import DataProcessing.Models.DataFile;
-import DataProcessing.Models.DataType;
+import Data.Models.DataFile;
+import Data.Models.DataType;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 /**
@@ -22,7 +20,7 @@ public class FileWriter {
     private final String fileSeparator = new String(new char[27]).replace("\0", "*");
 
     /**
-     *
+     * Writes a DataFile out as a .dat file
      * @param file The file to write out
      */
     public void writeDataFile(DataFile file) throws IOException {
@@ -34,6 +32,10 @@ public class FileWriter {
         Files.write(testfile, data, StandardCharsets.UTF_8);//, StandardOpenOption.APPEND);
     }
 
+    @Deprecated
+    /**
+     *
+     */
     public void writeAbsorptionFile(DataFile file) throws IOException {
         String header = file.getHeader();
         List<String> data = file.getDataAsString(DataType.ENERGY, DataType.THETA, DataType.ABSORPTION);
@@ -43,6 +45,14 @@ public class FileWriter {
         Files.write(testfile, data, StandardCharsets.UTF_8);//, StandardOpenOption.APPEND);
     }
 
+    //TODO unify overloaded writeAbsorptionFile if possible
+    /**
+     * Writes out an absorption file (.dat) for case where it is generated from two files
+     * @param absorption File to write out
+     * @param i0 i0 source for absorption file
+     * @param it i0t source for absorption file
+     * @throws IOException
+     */
     public void writeAbsorptionFile(DataFile absorption, DataFile i0, DataFile it) throws IOException {
         String header = absorption.getHeader();
         List<String> data = absorption.getDataAsString(DataType.ENERGY, DataType.THETA, DataType.ABSORPTION);
@@ -65,6 +75,15 @@ public class FileWriter {
         Files.write(testfile, data, StandardCharsets.UTF_8);//, StandardOpenOption.APPEND);
     }
 
+    /**
+     *
+     * @param absorption
+     * @param i0 i0 source for absorption file
+     * @param it i0t source for absorption file
+     * @param i0b i0b source for absorption file
+     * @param itb itb source for absorption file
+     * @throws IOException
+     */
     public void writeAbsorptionFile(DataFile absorption, DataFile i0, DataFile it, DataFile i0b, DataFile itb) throws IOException {
         String header = absorption.getHeader();
         List<String> data = absorption.getDataAsString(DataType.ENERGY, DataType.THETA, DataType.ABSORPTION);
@@ -94,6 +113,14 @@ public class FileWriter {
         Files.write(testfile, data, StandardCharsets.UTF_8);//, StandardOpenOption.APPEND);
     }
 
+    /**
+     * Writes out a .lst file containing a header, followed by a list of names of each DataFile and its respective header
+     * @param files DataFiles to list
+     * @param fileName Name of .lst file
+     * @param header Header of .lst file
+     * @param path Directory to write file to
+     * @throws IOException
+     */
     public void writeLstFile(List<DataFile> files, String fileName, String header, String path) throws IOException {
         List<String> toWrite = new LinkedList<>();
         toWrite.add(header);
@@ -102,14 +129,7 @@ public class FileWriter {
             toWrite.add(file.getFileName());
             toWrite.add("---");
         }
-
         Path testfile = Paths.get(path + fileName + ".lst");
-        Files.write(testfile, toWrite, StandardCharsets.UTF_8);//, StandardOpenOption.APPEND);
-        /*
-        if (string.contains("/")) {
-
-        }
-
-         */
+        Files.write(testfile, toWrite, StandardCharsets.UTF_8);
     }
 }

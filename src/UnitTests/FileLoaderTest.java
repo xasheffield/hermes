@@ -1,15 +1,13 @@
 package UnitTests;
 
-import DataProcessing.Models.DataFile;
-import DataProcessing.Models.MeasurementType;
-import DataProcessing.Models.XRaySample;
+import Data.Models.DataFile;
+import Data.Models.MeasurementType;
+import Data.Models.XRaySample;
 import IO.FileLoader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 

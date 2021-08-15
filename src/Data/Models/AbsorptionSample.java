@@ -1,4 +1,4 @@
-package DataProcessing.Models;
+package Data.Models;
 
 public class AbsorptionSample extends XRaySample {
 

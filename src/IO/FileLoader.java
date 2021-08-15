@@ -4,9 +4,9 @@ package IO;
  * @author Marco Seddon-Ferretti
  */
 
-import DataProcessing.Models.DataFile;
-import DataProcessing.Models.MeasurementType;
-import DataProcessing.Models.XRaySample;
+import Data.Models.DataFile;
+import Data.Models.MeasurementType;
+import Data.Models.XRaySample;
 
 import javax.swing.*;
 import java.io.File;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Scanner;
 
-public class FileLoader extends AbstractIO {
+public class FileLoader {
 
 
     /**
@@ -48,7 +48,7 @@ public class FileLoader extends AbstractIO {
     }
 
     /**
-     *
+     * Returns a String[] of the column names of each type of measurement in the data file.
      * @param file
      * @return String array of file names, or empty array if error reading file
      */
@@ -114,7 +114,7 @@ public class FileLoader extends AbstractIO {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 // Read lines until data separator (*)
-                if (!line.contains("*"))  //Only read the actual data lines
+                if (!line.contains("***"))  //Only read the actual data lines
                     header += line;
                 else
                     break;
@@ -129,7 +129,7 @@ public class FileLoader extends AbstractIO {
 
 
     /**
-     * Converts each data line in a text file into an DataProcessing.Models.XRaySample object
+     * Converts each data line in a text file into an Data.Models.XRaySample object
      * @param file
      * @return - The list of XRaySamples in the file
      */
@@ -144,22 +144,19 @@ public class FileLoader extends AbstractIO {
                 String line = scanner.nextLine();
                 if (line.contains("***")) {
                     scanner.nextLine(); // skip column names line
-                    //TODO janky fix, make it check for numbers
+                    //TODO janky fix, make it check for numbers -   line.contains(({0-9}.\t{0.9}) maybe;
                     break;
                 }
             }
             while (scanner.hasNextLine()) {
                 fileLines.add(scanner.nextLine());
             }
-
-
-
         } catch (FileNotFoundException fnfe) {
             fnfe.printStackTrace();
             System.out.println("Could not locate file: " + file.getName());
         }
 
-        //Parse each line, extracting the relevant measurements and creating DataProcessing.Models.XRaySample for each line
+        //Parse each line, extracting the relevant measurements and creating Data.Models.XRaySample for each line
         ArrayList<XRaySample> samples = new ArrayList<>();
         for (String line: fileLines) {
             String[] measurements = line.split("\t");

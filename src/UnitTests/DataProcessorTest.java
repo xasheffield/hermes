@@ -1,9 +1,9 @@
 package UnitTests;
 
-import DataProcessing.Models.DataFile;
-import DataProcessing.Models.MeasurementType;
-import DataProcessing.Models.XRaySample;
-import DataProcessing.Processors.DataProcessor;
+import Data.Models.DataFile;
+import Data.Models.MeasurementType;
+import Data.Models.XRaySample;
+import Data.Processors.DataProcessor;
 import IO.FileLoader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
