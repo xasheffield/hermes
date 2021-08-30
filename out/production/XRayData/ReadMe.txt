@@ -1,11 +1,16 @@
-This main file in this program is CoreWorker.java. This file reads information from the experimental data files (using the IO.FileInput.java class), and stores the relevant data in a custom data type (XRaySample.java), to facilitate any processing of the data which may later be necessary. CoreWorker can then call a Python script, passing it the data to plot as a parameter. This Python script uses MatPlotLib to plot the data passed into it, generating an interactive window of subplots. This could have been done more simply and succinctly, but was done with the intention of being robust, and a base for a GUI based piece of software.
+This program is split into four packages:
+- Data
+- Graphing
+- GUI
+- I0
+- UnitTests
 
+Data contains models of the Data the software will handle at various levels of granularity. A DataFile object contains
+a number of XRaySamples. DataType refers to what is being measured in a given reading of a sample (e.g. energy, theta, etc.), whereas
+MeasurementType refers to what is being measured in a given file (e.g. I0, It, etc.).
 
-Run this program by navigating to directory XRayData in a terminal instance, and executing:
-java CoreWorker x
-Where x is a number from 1-4. If no parameter is provided, it will default to 1.
-1 = With Sample
-2 = Without Sample
-3 = Background With Sample
-4 = Background Without Sample
+Graphing contains Grapher - a class which takes DataFile objects and parameters to display pop-up windows containing
+either 1-many data sets on separate axes, or 1-many data sets on a single set of axes (offset in the y axis by a
+user specified amount).
 
+GUI

@@ -88,6 +88,7 @@ public class DataFile {
         return stringData;
     }
 
+    @Deprecated
     /**
      *
      * @return A collection of all the measurements of energy in the data file
@@ -98,6 +99,7 @@ public class DataFile {
         return energy;
     }
 
+    @Deprecated
     /**
      *
      * @return A collection of all the measurements of theta in the data file
@@ -117,6 +119,7 @@ public class DataFile {
         return counts;
     }
 
+    @Deprecated
     /**
      * @return A collection of all the values of absorption in the data file
      */
@@ -126,6 +129,11 @@ public class DataFile {
         return absorption;
     }
 
+    /**
+     * Gets all the data of one type from a DataFile
+     * @param type The data type to return
+     * @return List of doubles containing the data
+     */
     public List<Double> getData(DataType type) {
         switch (type) {
             case ENERGY:
@@ -144,6 +152,10 @@ public class DataFile {
         return header;
     }
 
+    /**
+     * TODO doc
+     * @return
+     */
     public String getFileName() {
         Path filePath = Paths.get(this.getFilePath());
         return filePath.getFileName().toString();
@@ -160,8 +172,5 @@ public class DataFile {
 
     public void setHeader(String header) {
         this.header = header;
-    }
-
-    public void setName(String name) {
     }
 }

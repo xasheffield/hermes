@@ -1,13 +1,7 @@
-package DataProcessing.Models;
-
-import java.util.ArrayList;
+package Data.Models;
 
 /**
  * Represents a single data point from a set
- *
- * Energy = Column 1
- *  Theta = Column 2
- *  Cnts_per_live = Column 9 (= I 0 , I t , I 0b , I tb )
  * The detector on the instrument measures X-ray counts (Col 9) as a function of Theta; Energy is
  * computed from theta using a simple equation.
  */
@@ -17,7 +11,9 @@ public class XRaySample {
     private double energy; //Column 1
     private double theta; //Column 2
     private double cnts_per_live; //Column 9 ????
-    private double absorption;
+    private double absorption; //TODO polymorphism for absorption/corrected files?
+    //private double energyCorrected;
+    //private double thetaCorrected;
 
     public XRaySample(String energy, String theta, String cnts_per_live) {
         this.energy = formatExponents(energy);
@@ -31,12 +27,24 @@ public class XRaySample {
         this.cnts_per_live = meanCounts;
     }
 
-    public XRaySample(Double meanEnergy, Double meanTheta, Double meanCounts, Double absorption) {
-        this.energy = meanEnergy;
-        this.theta = meanTheta;
-        this.cnts_per_live = meanCounts;
+    public XRaySample(Double energy, Double theta, Double counts, Double absorption) {
+        this.energy = energy;
+        this.theta = theta;
+        this.cnts_per_live = counts;
         this.absorption = absorption;
     }
+
+    /*
+    public XRaySample(Double energy, Double theta, Double counts, Double absorption, Double energyCorrected, Double thetaCorrected) {
+        this.energy = energy;
+        this.theta = theta;
+        this.cnts_per_live = counts;
+        this.absorption = absorption;
+        this.energyCorrected = energyCorrected;
+        this.thetaCorrected = thetaCorrected;
+    }
+
+     */
 
     /**
      * Converts string representation of exponential number to a double
@@ -59,10 +67,11 @@ public class XRaySample {
         return (this.energy + "," + this.theta + "," + this.cnts_per_live + "!");// "!" Divides samples
     }
 
+    //TODO throw exception instead of returning 0
     public double getData(DataType type) {
         switch (type) {
             case ENERGY:
-            case ENERGY_CORRECTED: //TODO IMPLEMENT
+            case ENERGY_CORRECTED:
                 return getEnergy();
             case THETA:
             case THETA_CORRECTED:
@@ -113,4 +122,12 @@ public class XRaySample {
                 ", absorption=" + absorption +
                 '}';
     }
+
+    /*
+    public void setCorrected(double energyCorrected, double thetaCorrected) {
+        this.energyCorrected = energyCorrected;
+        this.thetaCorrected = thetaCorrected;
+    }
+
+     */
 }

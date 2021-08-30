@@ -1,8 +1,6 @@
 package Data.Processors;
 
-import Data.Models.DataFile;
-import Data.Models.MeasurementType;
-import Data.Models.XRaySample;
+import Data.Models.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -192,16 +190,24 @@ public class DataProcessor {
         return absorption;
     }
 
-    //TODO smarter way than reusing code
+    //TODO smarter way than reusing code for these methods
     public DataFile generateAbsorptionFile(DataFile i0, DataFile it, String header) {
         if (!checkRanges(i0, it)) {
             return null;
         }
-        ArrayList<Double> absorption = calculateAbsorption(i0, it);
+        ArrayList<Double> absorptionList = calculateAbsorption(i0, it);
         ArrayList<XRaySample> samples = new ArrayList<>();
         for (int i = 0; i < i0.getData().size(); i++) {
-            XRaySample source = i0.getData().get(i);
-            samples.add(new XRaySample(source.getEnergy(), source.getTheta(), source.getCnts_per_live(), absorption.get(i)));
+            XRaySample source = i0.getData().get(i); // As we have checked that ranges of all files match, it's okay to pick one arbitrarily
+            double energy = source.getEnergy();
+            double theta = source.getTheta();
+            double counts = source.getCnts_per_live();
+            double absorption = absorptionList.get(i);
+            double i0Counts =  i0.getData(DataType.COUNTS_PER_LIVE).get(i);
+            double itCounts = it.getData(DataType.COUNTS_PER_LIVE).get(i);
+
+            samples.add(new ProcessedSample(energy, theta, counts, absorption, i0Counts, itCounts));
+            //samples.add(new XRaySample(source.getEnergy(), source.getTheta(), source.getCnts_per_live(), absorptionList.get(i)));
         }
         return new DataFile(MeasurementType.ABSORPTION, "", header,samples);
     }
@@ -210,11 +216,23 @@ public class DataProcessor {
         if (!checkRanges(i0, it, i0b, itb)) {
             return null;
         }
-        ArrayList<Double> absorption = calculateAbsorption(i0, it, i0b, itb);
+        ArrayList<Double> absorptionList = calculateAbsorption(i0, it, i0b, itb);
         ArrayList<XRaySample> samples = new ArrayList<>();
         for (int i = 0; i < i0.getData().size(); i++) {
             XRaySample source = i0.getData().get(i);
-            samples.add(new XRaySample(source.getEnergy(), source.getTheta(), source.getCnts_per_live(), absorption.get(i)));
+            double energy = source.getEnergy();
+            double theta = source.getTheta();
+            double counts = source.getCnts_per_live();
+            double absorption = absorptionList.get(i);
+            double i0Counts =  i0.getData(DataType.COUNTS_PER_LIVE).get(i);
+            double itCounts = it.getData(DataType.COUNTS_PER_LIVE).get(i);
+            double i0bCounts =  i0b.getData(DataType.COUNTS_PER_LIVE).get(i);
+            double itbCounts = itb.getData(DataType.COUNTS_PER_LIVE).get(i);
+
+
+            samples.add(new ProcessedSample(energy, theta, counts, absorption, i0Counts, itCounts, i0bCounts, itbCounts));
+
+            //samples.add(new XRaySample(source.getEnergy(), source.getTheta(), source.getCnts_per_live(), absorption.get(i)));
         }
         return new DataFile(MeasurementType.ABSORPTION, "", header,samples);
     }

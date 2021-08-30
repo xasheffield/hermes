@@ -32,6 +32,19 @@ public class FileWriter {
         Files.write(testfile, data, StandardCharsets.UTF_8);//, StandardOpenOption.APPEND);
     }
 
+    /**
+     * Writes a DataFile out as a .dat file
+     * @param file The file to write out
+     */
+    public void writeDataFile(DataFile file, DataType... types) throws IOException {
+        String header = file.getHeader();
+        List<String> data = file.getDataAsString(types);
+        data.add(0, fileSeparator);
+        data.add(0, header);
+        Path testfile = Paths.get(file.getFilePath() + ".dat");
+        Files.write(testfile, data, StandardCharsets.UTF_8);//, StandardOpenOption.APPEND);
+    }
+
     @Deprecated
     /**
      *

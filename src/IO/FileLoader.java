@@ -1,6 +1,6 @@
 package IO;
 /**
- * Reads x-ray data files and stores the contents as DataFile objects
+ * Reads x-ray data files (text files) and stores the contents as DataFile objects.
  * @author Marco Seddon-Ferretti
  */
 
