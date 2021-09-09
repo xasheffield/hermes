@@ -72,6 +72,7 @@ public class GUI extends JFrame {
     private JButton chooseFileToDefineButton;
     private JLabel correctedThetaSample;
     private JLabel correctedEnergySample;
+    private JTextArea addSomeTextAboutTextArea;
 
     /**
      * Cross-tab components
@@ -94,6 +95,8 @@ public class GUI extends JFrame {
     Grapher grapher;
     PopUpMaker popUpMaker = new PopUpMaker();
 
+    String fileChooserPath = ".";//Initialise to current directory
+
     public GUI(String title) {
         super(title);
         this.pack();
@@ -111,18 +114,19 @@ public class GUI extends JFrame {
         dataProcessor = new DataProcessor();
         grapher = new Grapher();
         addActionListeners();
-        chooseFileToDefineButton.addActionListener(new ChooseEmonoListener());
+        chooseFileToDefineButton.addActionListener(new ChooseCalibrationFileListener());
     }
 
     private void initComponents(){
         this.setVisible(true);
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
-        this.setMinimumSize(new Dimension(600,450));
+        this.setMinimumSize(new Dimension(650,550)); //TODO better sizing
+        this.setSize(600, 600); //Does nothing?
         this.setLocationRelativeTo(null);//Centers the frame
     }
 
     private void addActionListeners() {
-        /* TODO convert to inner classes, potentially move to new file and pass GUI as argument to constructor for access to fields
+        /* TODO move to new file and pass GUI as argument to constructor for access to fields
         */
         loadFilesButton.addActionListener(new LoadFilesListener());
         generateMeanButton.addActionListener(new GenerateMeanListener());
@@ -135,7 +139,7 @@ public class GUI extends JFrame {
         rootTabPane.addComponentListener(new ComponentAdapter() {});
         rootTabPane.addChangeListener(new ChangeTabListener());
         leakageIsSignificantCheckBox.addActionListener(new SignificantLeakageListener());
-        generateAbsorptionFileButton.addActionListener(new GenerateAbsorptionListener());
+        generateAbsorptionFileButton.addActionListener(new GenerateAbsorptionListener(this));
         initiateCalibrationButton.addActionListener(new CorrectScaleListener());
     }
 
@@ -157,7 +161,7 @@ public class GUI extends JFrame {
     private File saveDialogue() {
         JFileChooser chooser = new JFileChooser(".");
         chooser.setDialogTitle("Specify where to save your file");
-        int userSelection = chooser.showSaveDialog(this); // TODO New JFrame()?
+        int userSelection = chooser.showSaveDialog(this); //
 
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             File fileToSave = chooser.getSelectedFile();
@@ -172,11 +176,11 @@ public class GUI extends JFrame {
      * Opens an interface allowing a user to select a file from file system
      * @return The file(s) selected by the user, in an array. Returns an empty array if no files are selected.
      */
-    private File[] openFileChooser(boolean fileSelection, boolean directorySelection, boolean multiSelection){
+    private File[] openFileChooser (boolean fileSelection, boolean directorySelection, boolean multiSelection){
         File[] files;
         Scanner fileIn;
         int response;
-        JFileChooser chooser = new JFileChooser(".");
+        JFileChooser chooser = new JFileChooser(fileChooserPath);
 
         if (fileSelection && directorySelection)
             chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
@@ -189,9 +193,7 @@ public class GUI extends JFrame {
 
         if (response == JFileChooser.APPROVE_OPTION) {
             files = chooser.getSelectedFiles();
-            for (File file: files) {
-                System.out.println(file.getAbsolutePath());
-            }
+            fileChooserPath = files[0].getParentFile().getAbsolutePath();
             return files;
         }
         return new File[0];
@@ -250,7 +252,13 @@ public class GUI extends JFrame {
         if (background) {
             DataFile i0b = (DataFile) absorptioni0bList.getSelectedValue();
             DataFile itb = (DataFile) absorptionitbList.getSelectedValue();
-            absorptionFile = dataProcessor.generateAbsorptionFile(i0, it, i0b, itb, "");
+            try {
+                absorptionFile = dataProcessor.generateAbsorptionFile(i0, it, i0b, itb, "");
+            } catch (NumberFormatException nfe) {
+                JOptionPane.showMessageDialog(this, "Error generating absorption file. Tried to calculate logarithm of a negative number, check that supplied" +
+                        " files are correct.");
+                return null;
+            }
         }
         else {
             absorptionFile = dataProcessor.generateAbsorptionFile(i0, it, "");
@@ -272,7 +280,7 @@ public class GUI extends JFrame {
         if (leakageIsSignificantCheckBox.isSelected()) {
             if (absorptioni0List.isSelectionEmpty() || absorptioni0bList.isSelectionEmpty() ||
                     absorptionitList.isSelectionEmpty() || absorptionitbList.isSelectionEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please select one i0, one it, one i0b and one itb file");
+                JOptionPane.showMessageDialog(this, "Please select one i0, one it, one i0 leakage and one it leakage file");
                 return false;
             }
         }
@@ -369,11 +377,13 @@ public class GUI extends JFrame {
     private class ResetDataListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            MeasurementType typeToClear = MeasurementType.valueOf((String) measurementTypeComboBox.getSelectedItem());
+            //MeasurementType typeToClear = MeasurementType.valueOf((String) measurementTypeComboBox.getSelectedItem());
+            MeasurementType typeToClear = MeasurementType.labelToValue((String) measurementTypeComboBox.getSelectedItem());
             int result = JOptionPane.showConfirmDialog(new JFrame(), "Are you sure you would like to clear all loaded "
                     + typeToClear.toString() + " files?");
             if (result == JOptionPane.YES_OPTION) {
-                ((DefaultListModel) getList(MeasurementType.valueOf((String) measurementTypeComboBox.getSelectedItem())).getModel()).removeAllElements();
+                ((DefaultListModel) getList(typeToClear).getModel()).removeAllElements();
+                dataManager.clearFiles(typeToClear);
             }
         }
     }
@@ -384,7 +394,7 @@ public class GUI extends JFrame {
             JList selected = getList(getSelectedType());
             int[] selectedIndices = selected.getSelectedIndices();
             if (selectedIndices.length == 0) {
-                JOptionPane.showMessageDialog(new JFrame(), "Select " + getSelectedType() + " file(s) to plot");
+                JOptionPane.showMessageDialog(new JFrame(), "Select " + getSelectedType().label + " file(s) to plot");
                 return;
             }
 
@@ -522,6 +532,10 @@ public class GUI extends JFrame {
     }
 
     private class GenerateAbsorptionListener implements ActionListener {
+        GenerateAbsorptionListener(GUI gui) {
+            this.gui = gui;
+        }
+        GUI gui;
         @Override
         public void actionPerformed(ActionEvent e) {
             String header = JOptionPane.showInputDialog("Enter File Header", "");
@@ -533,7 +547,7 @@ public class GUI extends JFrame {
                 return;
             absorptionFile.setHeader(header);
             try {
-                File file = saveDialogue();
+                File file = popUpMaker.saveDialogue(gui);
                 absorptionFile.setFilePath(file.getAbsolutePath());
 
                 ArrayList<DataFile> sourceFiles = new ArrayList<>();
@@ -566,7 +580,7 @@ public class GUI extends JFrame {
         @Override
         public void stateChanged(ChangeEvent e) {
             //TODO something smarter
-            pack();
+            //pack();
         }
     }
 
@@ -583,19 +597,26 @@ public class GUI extends JFrame {
                 absorptioni0bList.clearSelection();
                 absorptionitbList.clearSelection();
             }
-            pack();
+            pack(); //TODO test what having this commented out does - answer: invisible panels, needs to be repacked
         }
     }
 
     private class CorrectScaleListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            //TODO finish
+            double energyMin;
+            double thetaMin;
+            try {
+                energyMin = Double.parseDouble(correctedEnergySample.getText());
+                thetaMin = Double.parseDouble(correctedThetaSample.getText());
+            } catch (NumberFormatException nfe) {
+                JOptionPane.showMessageDialog(new JFrame(), "Select a file to define characteristic monochromator energy before proceeding");
+                return;
+            }
+            double emono = energyMin * Math.sin(Math.toRadians(thetaMin)); //Calculate monochromator energy from  values in GUI
+            JOptionPane.showMessageDialog(new JFrame(), "Emono (eV): " + emono);
 
-            double energyMin = Double.parseDouble(correctedEnergySample.getText());
-            double thetaMin = Double.parseDouble(correctedThetaSample.getText());
-            double emono = energyMin * Math.sin(thetaMin);
-            JOptionPane.showMessageDialog(new JFrame(), "Emono: " + emono);
+
             double eObserved = -1;
             double eTrue = -1;
             while (eObserved == -1 || eTrue == -1)  {
@@ -609,11 +630,7 @@ public class GUI extends JFrame {
                     return;
                 }
             }
-            //TODO move most code into DataProcessor
-            double thetaObserved = Math.asin(emono / eObserved);
-            double thetaTrue = Math.asin(emono / eTrue);
-            double thetaShift = thetaObserved - thetaTrue; //TODO which way round is this?
-            JOptionPane.showMessageDialog(new JFrame(), "Theta shift = " + thetaShift);
+
             List<DataFile> filesToCorrect = new ArrayList<DataFile>();
             for (Object dataFile: absorptionList.getSelectedValuesList()) {
                 filesToCorrect.add((DataFile) dataFile);
@@ -629,6 +646,14 @@ public class GUI extends JFrame {
             } catch (NullPointerException npe) { // If user cancelled save dialogue, this is thrown
                 return;
             }
+
+
+            //TODO move most code into DataProcessor
+            double thetaObserved = Math.asin(emono / eObserved);
+            double thetaTrue = Math.asin(emono / eTrue);
+            double thetaShift = Math.toDegrees(thetaTrue - thetaObserved); //TODO which way round is this?
+            JOptionPane.showMessageDialog(new JFrame(), "Theta shift (deg) = " + thetaShift);
+
 
 
             for (DataFile file: filesToCorrect) {
@@ -654,12 +679,12 @@ public class GUI extends JFrame {
                     else {
                         copySample = new ProcessedSample(energy, theta, counts, absorption, i0, it);
                     }
-                    double correctedTheta = theta - thetaShift;
-                    double correctedEnergy = emono / Math.sin(correctedTheta);
+                    double correctedTheta = theta + thetaShift;
+                    double correctedEnergy = emono / Math.sin(Math.toRadians(correctedTheta));
                     copySample.setCorrected(correctedEnergy, correctedTheta);
                     correctedSamples.add(copySample);
                 }
-                correctedFile = new DataFile(file.getFileType(), savePath + "/" + file.getFileName() + "_corr", "", correctedSamples);
+                correctedFile = new DataFile(file.getFileType(), savePath + System.getProperty("file.separator") + file.getFileName() + "_corr", "", correctedSamples);
                 correctedFiles.add(correctedFile);
                 try {
                     if (hasBackground) {
@@ -671,11 +696,25 @@ public class GUI extends JFrame {
                                 DataType.ABSORPTION, DataType.I0, DataType.IT, DataType.ENERGY_CORRECTED, DataType.THETA_CORRECTED);
 
                     }
+                    DataFile calibrationFile = dataManager.getCalibrationFile();
+                    fileWriter.writeCorrectedLstFile(correctedFile, calibrationFile.getFileName(), energyMin, thetaMin, emono, thetaShift);
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
                 }
+                grapher.displayCompareGraph(file, DataType.ENERGY, DataType.ABSORPTION, correctedFile, DataType.ENERGY_CORRECTED, DataType.ABSORPTION);
+                grapher.displayCompareGraph(file, DataType.THETA, DataType.ABSORPTION, correctedFile, DataType.THETA_CORRECTED, DataType.ABSORPTION);
                 //TODO case split for has/doesn't have background
+
+                //TODO plot Absorption vs original theta, vs original energy
+                //Absorption vs corrected theta, vs corrected energy
             }
+            /*
+            grapher.displayGraph((ArrayList<DataFile>) filesToCorrect, DataType.ENERGY, DataType.ABSORPTION);
+            grapher.displayGraph((ArrayList<DataFile>) correctedFiles, DataType.ENERGY_CORRECTED, DataType.ABSORPTION);
+            grapher.displayGraph((ArrayList<DataFile>) filesToCorrect, DataType.THETA, DataType.ABSORPTION);
+            grapher.displayGraph((ArrayList<DataFile>) correctedFiles, DataType.THETA_CORRECTED, DataType.ABSORPTION);
+
+             */
         }
 
 
@@ -686,7 +725,7 @@ public class GUI extends JFrame {
      * Displays the first Energy and Theta values in the chosen file, so that the user can choose whether
      * to proceed or use another file.
      */
-    private class ChooseEmonoListener implements ActionListener {
+    private class ChooseCalibrationFileListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (absorptionList.getSelectedIndices().length != 1) {
@@ -694,6 +733,7 @@ public class GUI extends JFrame {
                 return;
             }
             DataFile file = (DataFile) absorptionList.getSelectedValue();
+            dataManager.setCalibrationFile(file);
             double energy0 = file.getData(DataType.ENERGY).get(0);
             double theta0 = file.getData(DataType.THETA).get(0);
             correctedEnergySample.setText(String.valueOf(energy0));

@@ -3,6 +3,7 @@ package GUI;
 import IO.FileLoader;
 
 import javax.swing.*;
+import java.io.File;
 
 public class PopUpMaker {
     /**
@@ -49,5 +50,21 @@ public class PopUpMaker {
             return false;
 
         }
+    }
+
+    /**
+     * Open Save Dialogue
+     */
+    protected File saveDialogue(GUI gui) {
+        JFileChooser chooser = new JFileChooser(".");
+        chooser.setDialogTitle("Specify where to save your file");
+        int userSelection = chooser.showSaveDialog(gui); //
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = chooser.getSelectedFile();
+            System.out.println("Save as file: " + fileToSave.getAbsolutePath());
+            return fileToSave;
+        }
+        else return null;
     }
 }
