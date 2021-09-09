@@ -1,6 +1,7 @@
 package Graphing;
 import Data.Models.DataFile;
 import Data.Models.DataType;
+import Data.Models.ProcessedSample;
 import Data.Models.XRaySample;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -139,6 +140,20 @@ public class Grapher {
         createWindow(panel);
     }
 
+    public void displayCompareGraph(DataFile file1, DataType x1, DataType y1, DataFile file2, DataType x2, DataType y2) {
+        JFrame frame = new JFrame("Plot");
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(createCompareGraph(file1, x1, y1, file2, x2, y2)); //Plot each data file and add to main panel
+        createWindow(panel);
+    }
+
+    /**
+     * Creates a scatter plot from a given file.
+     * @param file File to plot
+     * @param x Data to plot on x axis
+     * @param y Data to plot on y axis
+     * @return A ChartPanel containing a scatter plot of the specified data
+     */
     public ChartPanel createGraph(DataFile file, DataType x, DataType y) {
         XYSeriesCollection dataset = new XYSeriesCollection();
         XYSeries series1 = new XYSeries(file.getFileName());
@@ -155,7 +170,7 @@ public class Grapher {
 
         XYPlot plot = scatterPlot.getXYPlot();
         XYLineAndShapeRenderer renderer0 = new XYLineAndShapeRenderer();
-        renderer0.setSeriesLinesVisible(0, false); // Hide lines between points
+        renderer0.setSeriesLinesVisible(0, true); // Hide or show lines between points
         plot.setRenderer(0, renderer0);
         plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(0, Color.black);
         plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(0, ShapeUtilities.createDiagonalCross(1, 1));
@@ -163,15 +178,49 @@ public class Grapher {
         return new ChartPanel(scatterPlot);
     }
 
+    public ChartPanel createCompareGraph(DataFile file1, DataType x1, DataType y1, DataFile file2, DataType x2, DataType y2) {
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        ArrayList<XYSeries> seriesList = new ArrayList<>(); //One series corresponds to one file, the collection of series make up a dataset
+
+        XYSeries set1 = new XYSeries(file1.getFileName());
+        for (XRaySample sample:file1.getData()) {
+            if (sample instanceof ProcessedSample) //Cast to subclass if necessary
+                sample = (ProcessedSample) sample;
+            set1.add(sample.getData(x1), sample.getData(y1));
+        }
+
+        XYSeries set2 = new XYSeries(file2.getFileName());
+        for (XRaySample sample:file2.getData()) {
+            if (sample instanceof ProcessedSample) {
+                sample = (ProcessedSample) sample;
+            }
+            set2.add(sample.getData(x2), sample.getData(y2));
+        }
+
+        dataset.addSeries(set1);
+        dataset.addSeries(set2);
+
+        JFreeChart scatterPlot = createScatterPlot(x1, y1, dataset);
+        return new ChartPanel(scatterPlot);
+    }
+
+    /**
+     * Creates a scatter plot of given files, offset on y axis by user specified value
+     * @param files DataFiles to plot
+     * @param offset
+     * @param x Measurement type to plot on x
+     * @param y Measurement type to plot on y
+     * @return The graph as a ChartPanel
+     */
     public ChartPanel createOffsetGraph(ArrayList<DataFile> files, int offset, DataType x, DataType y) {
         XYSeriesCollection dataset = new XYSeriesCollection();
-        ArrayList<XYSeries> seriesList = new ArrayList<>();
+        ArrayList<XYSeries> seriesList = new ArrayList<>(); //One series corresponds to one file, the collection of series make up a dataset
         int i = 0;//Counter for offset on each dataset
 
         for (DataFile file: files) {
             XYSeries set = new XYSeries(file.getFileName());
             for (XRaySample sample: file.getData()) {
-                set.add(sample.getEnergy(), sample.getCnts_per_live() + offset*i);
+                set.add(sample.getEnergy(), sample.getCnts_per_live() + offset*i);//TODO generify
             }
             seriesList.add(set);
             i++;
@@ -180,28 +229,36 @@ public class Grapher {
             dataset.addSeries(series);
         }
 
+        JFreeChart scatterPlot = createScatterPlot(x, y, dataset);
+        return new ChartPanel(scatterPlot);
+    }
+
+    private JFreeChart createScatterPlot(DataType x, DataType y, XYSeriesCollection dataset) {
         JFreeChart scatterPlot = ChartFactory.createScatterPlot("", x.label, y.label, dataset,
                 PlotOrientation.VERTICAL, true, false, false);
         scatterPlot.setBackgroundPaint(Color.white);
 
         XYPlot plot = scatterPlot.getXYPlot();
-        XYLineAndShapeRenderer renderer0 = new XYLineAndShapeRenderer();
-        renderer0.setSeriesLinesVisible(0, false); // Hide lines between points
-        plot.setRenderer(0, renderer0);
+        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+        plot.setRenderer(0, renderer);
         plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(0, Color.black);
         plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(0, ShapeUtilities.createDiagonalCross(1, 1));
 
-        //Make points smaller for all sets
-        //TODO make this work
-        for (int j = 0; j < plot.getDatasetCount(); j++) {
-            renderer0.setSeriesLinesVisible(j, false);
-            plot.setRenderer(j, renderer0);
+
+        for (int j = 0; j < plot.getSeriesCount(); j++) {
+            renderer.setSeriesLinesVisible(j, true); // Hide lines between points
+            plot.setRenderer(j, renderer);
+            //plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(j, Color.black);
+            plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(j, ShapeUtilities.createDiagonalCross(1, 1));
+
+            /*
             XYItemRenderer datasetRenderer = plot.getRendererForDataset(plot.getDataset(j));
             Shape shape = datasetRenderer.getSeriesShape(j);
             //datasetRenderer.setSeriesShape(j, shape.);
             datasetRenderer.setSeriesShape(j, ShapeUtilities.createDiagonalCross(1, 1));
-        }
 
-        return new ChartPanel(scatterPlot);
+             */
+        }
+        return scatterPlot;
     }
 }
