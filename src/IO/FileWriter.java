@@ -145,4 +145,26 @@ public class FileWriter {
         Path testfile = Paths.get(path + fileName + ".lst");
         Files.write(testfile, toWrite, StandardCharsets.UTF_8);
     }
+
+    /**
+     * Method for writing an lst file describing a processed file with corrected energy and theta scales.
+     * @param correctedFile - Name of the corrected file described by the lst
+     * @param calibrationFileName - Name of file used for calibration
+     * @param calibrationEnergy - Value of energy used for calibrationm
+     * @param calibrationTheta - Value of theta used for calibration
+     * @param eMono - Monochromator energy
+     * @param thetaShift - Applied theta shift (deg)
+     */
+    public void writeCorrectedLstFile(DataFile correctedFile, String calibrationFileName, double calibrationEnergy, double calibrationTheta,
+                                      double eMono, double thetaShift) throws IOException {
+        List<String> toWrite = new LinkedList<>();
+        toWrite.add("Calibration data file name: " + calibrationFileName);
+        toWrite.add("Calibration Energy (eV): " + calibrationEnergy);
+        toWrite.add("Calibration Theta (deg): " + calibrationTheta);
+        toWrite.add("Emono (eV): " + eMono);
+        toWrite.add("Theta Shift: " + thetaShift);
+        Path path = Paths.get(correctedFile.getFilePath() + ".lst");
+        Files.write(path, toWrite, StandardCharsets.UTF_8);
+
+    }
 }
