@@ -192,19 +192,22 @@ public class DataProcessor {
 
     //TODO smarter way than reusing code for these methods
     public DataFile generateAbsorptionFile(DataFile i0, DataFile it, String header) {
+        DataFile i0File = i0;
+        DataFile itFile = it;
         if (!checkRanges(i0, it)) {
-            return null;
+            ArrayList<DataFile> truncatedFiles = (ArrayList<DataFile>) truncateIfNeeded(i0File, itFile);
+            i0File = truncatedFiles.get(0); itFile = truncatedFiles.get(1);
         }
-        ArrayList<Double> absorptionList = calculateAbsorption(i0, it);
+        ArrayList<Double> absorptionList = calculateAbsorption(i0File, itFile);
         ArrayList<XRaySample> samples = new ArrayList<>();
-        for (int i = 0; i < i0.getData().size(); i++) {
-            XRaySample source = i0.getData().get(i); // As we have checked that ranges of all files match, it's okay to pick one arbitrarily
+        for (int i = 0; i < i0File.getData().size(); i++) {
+            XRaySample source = i0File.getData().get(i); // As we have checked that ranges of all files match, it's okay to pick one arbitrarily
             double energy = source.getEnergy();
             double theta = source.getTheta();
             double counts = source.getCnts_per_live();
             double absorption = absorptionList.get(i);
-            double i0Counts =  i0.getData(DataType.COUNTS_PER_LIVE).get(i);
-            double itCounts = it.getData(DataType.COUNTS_PER_LIVE).get(i);
+            double i0Counts =  i0File.getData(DataType.COUNTS_PER_LIVE).get(i);
+            double itCounts = itFile.getData(DataType.COUNTS_PER_LIVE).get(i);
 
             samples.add(new ProcessedSample(energy, theta, counts, absorption, i0Counts, itCounts));
             //samples.add(new XRaySample(source.getEnergy(), source.getTheta(), source.getCnts_per_live(), absorptionList.get(i)));
@@ -212,22 +215,33 @@ public class DataProcessor {
         return new DataFile(MeasurementType.ABSORPTION, "", header,samples);
     }
 
-    public DataFile generateAbsorptionFile(DataFile i0, DataFile it, DataFile i0b, DataFile itb, String header) {
-        if (!checkRanges(i0, it, i0b, itb)) {
-            return null;
+    public DataFile generateAbsorptionFile(DataFile i0, DataFile it, DataFile i0b, DataFile itb, String header) throws NumberFormatException {
+        DataFile i0File = i0;
+        DataFile itFile = it;
+        DataFile i0bFile = i0b;
+        DataFile itbFile = itb;
+        if (!checkRanges(i0File, itFile, i0bFile, itbFile)) {
+            ArrayList<DataFile> truncatedFiles = (ArrayList<DataFile>) truncateIfNeeded(i0File, itFile, i0bFile, itbFile);
+            i0File = truncatedFiles.get(0); itFile = truncatedFiles.get(1);
+            i0bFile = truncatedFiles.get(2); itbFile = truncatedFiles.get(3);
         }
-        ArrayList<Double> absorptionList = calculateAbsorption(i0, it, i0b, itb);
+        ArrayList<Double> absorptionList = null;
+        try {
+            absorptionList = calculateAbsorption(i0File, itFile, i0bFile, itbFile);
+        } catch (NumberFormatException nfe) {
+            throw nfe;
+        }
         ArrayList<XRaySample> samples = new ArrayList<>();
-        for (int i = 0; i < i0.getData().size(); i++) {
-            XRaySample source = i0.getData().get(i);
+        for (int i = 0; i < i0File.getData().size(); i++) {
+            XRaySample source = i0File.getData().get(i);
             double energy = source.getEnergy();
             double theta = source.getTheta();
             double counts = source.getCnts_per_live();
             double absorption = absorptionList.get(i);
-            double i0Counts =  i0.getData(DataType.COUNTS_PER_LIVE).get(i);
-            double itCounts = it.getData(DataType.COUNTS_PER_LIVE).get(i);
-            double i0bCounts =  i0b.getData(DataType.COUNTS_PER_LIVE).get(i);
-            double itbCounts = itb.getData(DataType.COUNTS_PER_LIVE).get(i);
+            double i0Counts =  i0File.getData(DataType.COUNTS_PER_LIVE).get(i);
+            double itCounts = itFile.getData(DataType.COUNTS_PER_LIVE).get(i);
+            double i0bCounts =  i0bFile.getData(DataType.COUNTS_PER_LIVE).get(i);
+            double itbCounts = itbFile.getData(DataType.COUNTS_PER_LIVE).get(i);
 
 
             samples.add(new ProcessedSample(energy, theta, counts, absorption, i0Counts, itCounts, i0bCounts, itbCounts));
@@ -237,7 +251,7 @@ public class DataProcessor {
         return new DataFile(MeasurementType.ABSORPTION, "", header,samples);
     }
 
-    public ArrayList<Double> calculateAbsorption(DataFile i0File, DataFile itFile, DataFile i0bFile, DataFile itbFile) {
+    public ArrayList<Double> calculateAbsorption(DataFile i0File, DataFile itFile, DataFile i0bFile, DataFile itbFile) throws NumberFormatException {
         //TODO method body
         List<Double> it_counts = itFile.getCounts();
         Iterator<Double> i0 = i0File.getCounts().iterator();
@@ -246,9 +260,11 @@ public class DataProcessor {
         Iterator<Double> itb = itbFile.getCounts().iterator();
 
         ArrayList<Double> absorption = new ArrayList<>();
-        while (i0.hasNext() && it.hasNext()) {
+        while (i0.hasNext() && it.hasNext() && i0b.hasNext() && itb.hasNext()) {
             double a = Math.log((i0.next() - i0b.next()) / (it.next() - itb.next()));
             absorption.add(a);
+            if (Double.isNaN(a))
+                throw new NumberFormatException("Tried to calculate the logarithm of a negative number");
         }
         return absorption;
     }
@@ -279,6 +295,7 @@ public class DataProcessor {
         }
         return true;
     }
+
 
     /**
      * For a list of files, returns versions for which the data is truncated such that only samples
@@ -334,6 +351,13 @@ public class DataProcessor {
     }
 
 
+    public List<DataFile> truncateIfNeeded(DataFile... files) {
+        ArrayList<DataFile> fileList = new ArrayList<>();
+        for (DataFile file: files) 
+            fileList.add(file);
+        return truncateIfNeeded(fileList);
+    }
+    
     public List<DataFile> truncateIfNeeded(List<DataFile> files) {
         DataFile[] filesArr = files.toArray(new DataFile[0]);
         if (!checkRanges(filesArr)) {
