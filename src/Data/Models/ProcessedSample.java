@@ -43,7 +43,7 @@ public class ProcessedSample extends XRaySample {
     public double getData(DataType type) {
         switch (type) {
             case ENERGY: return getEnergy();
-            case ENERGY_CORRECTED: return getEnergyCorrected();//TODO IMPLEMENT
+            case ENERGY_CORRECTED: return getEnergyCorrected();
             case THETA: return getTheta();
             case THETA_CORRECTED: return getThetaCorrected();
             case COUNTS_PER_LIVE: return getCnts_per_live();

@@ -9,9 +9,6 @@ import java.util.stream.Collectors;
 
 public class DataManager {
 
-    //TODO is there a cleaner pattern with fewer repeated switches for these methods?
-
-
     //Lists of data by Measurement Type
     ArrayList<DataFile> i0Files = new ArrayList<>();
     ArrayList<DataFile> i0bFiles = new ArrayList<>();
@@ -19,6 +16,8 @@ public class DataManager {
     ArrayList<DataFile> itbFiles = new ArrayList<>();
     ArrayList<DataFile> absorptionFiles = new ArrayList<>();
     ArrayList<DataFile> correctedFiles = new ArrayList<>();
+
+    DataFile calibrationFile; //File used for calibration when correcting energy and theta scales
 
 
     /**
@@ -87,5 +86,13 @@ public class DataManager {
                 throw new IllegalArgumentException("Unexpected value: " + type +". \n MeasurementType not recognised.");
         }
         return files;
+    }
+
+    public DataFile getCalibrationFile() {
+        return calibrationFile;
+    }
+
+    public void setCalibrationFile(DataFile calibrationFile) {
+        this.calibrationFile = calibrationFile;
     }
 }

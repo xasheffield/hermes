@@ -26,6 +26,9 @@ public class FileLoader {
     int energyIndex = -1;
     int thetaIndex = -1;
     int countsIndex = -1;
+    int icrIndex = -1;
+    int ocrIndex = -1;
+
     public boolean valuesInitialised = false;
     String[] columnNames;
 
@@ -35,16 +38,25 @@ public class FileLoader {
     public void setThetaIndex(int thetaIndex) {
         this.thetaIndex = thetaIndex;
     }
-    public void setCountsIndex(int countsIndex) {
-        this.countsIndex = countsIndex;
-    }
+    public void setCountsIndex(int countsIndex) { this.countsIndex = countsIndex; }
+    public void setICRIndex(int icrIndex) { this.icrIndex = icrIndex; }
+    public void setOCRIndex(int ocrIndex) { this.ocrIndex = ocrIndex; }
+
     public void setValuesInitialised(boolean valuesInitialised) {
         this.valuesInitialised = valuesInitialised;
     }
     public void setIndeces(int energy, int theta, int counts) {
         this.energyIndex = energy;
         this.thetaIndex = theta;
-        this.countsIndex = counts;
+        this.countsIndex = counts; //TODO icr ocr
+    }
+
+    public void setIndeces(int energy, int theta, int counts, int icr, int ocr) {
+        this.energyIndex = energy;
+        this.thetaIndex = theta;
+        this.countsIndex = counts; //TODO icr ocr
+        this.icrIndex = icr;
+        this.ocrIndex = ocr;
     }
 
     /**

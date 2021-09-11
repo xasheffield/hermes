@@ -142,7 +142,7 @@ public class FileWriter {
             toWrite.add(file.getFileName());
             toWrite.add("---");
         }
-        Path testfile = Paths.get(path + fileName + ".lst");
+        Path testfile = Paths.get(path + fileName + ".txt");
         Files.write(testfile, toWrite, StandardCharsets.UTF_8);
     }
 
@@ -163,7 +163,7 @@ public class FileWriter {
         toWrite.add("Calibration Theta (deg): " + calibrationTheta);
         toWrite.add("Emono (eV): " + eMono);
         toWrite.add("Theta Shift: " + thetaShift);
-        Path path = Paths.get(correctedFile.getFilePath() + ".lst");
+        Path path = Paths.get(correctedFile.getFilePath() + ".txt");
         Files.write(path, toWrite, StandardCharsets.UTF_8);
 
     }

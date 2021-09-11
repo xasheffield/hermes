@@ -15,11 +15,17 @@ public class PopUpMaker {
         JComboBox energyBox = new JComboBox(columnNames);
         JComboBox thetaBox = new JComboBox(columnNames);
         JComboBox countsBox = new JComboBox(columnNames);
+        JComboBox icrBox = new JComboBox(columnNames);
+        JComboBox ocrBox = new JComboBox(columnNames);
         JLabel eLabel = new JLabel("Energy");
         JLabel tLabel = new JLabel("Theta");
         JLabel cLabel = new JLabel("Counts");
+        JLabel icrLabel = new JLabel("ICR");
+        JLabel ocrLabel = new JLabel("OCR");
 
-        Object[] options = new Object[] {energyBox, thetaBox, countsBox};
+        //TODO add OCR/ICR
+
+        Object[] options = new Object[] {energyBox, thetaBox, countsBox, icrBox, ocrBox};
 
         JPanel optionPanel = new JPanel();
         optionPanel.add(eLabel);
@@ -30,18 +36,25 @@ public class PopUpMaker {
         optionPanel.add(Box.createVerticalStrut(15));
         optionPanel.add(cLabel);
         optionPanel.add(countsBox);
+        optionPanel.add(Box.createVerticalStrut(15));
+        optionPanel.add(icrLabel);
+        optionPanel.add(icrBox);
+        optionPanel.add(Box.createVerticalStrut(15));
+        optionPanel.add(ocrLabel);
+        optionPanel.add(ocrBox);
 
         int result = JOptionPane.showConfirmDialog(null, optionPanel,
-                "Please Select Energy, Theta, Counts", JOptionPane.OK_CANCEL_OPTION);
+                "Please Select Energy, Theta, Counts, ICR, OCR", JOptionPane.OK_CANCEL_OPTION);
 
         // If the user presses okay button
         if (result == JOptionPane.YES_OPTION) {
             int energyIndex = energyBox.getSelectedIndex();
             int thetaIndex = thetaBox.getSelectedIndex();
             int countsIndex = countsBox.getSelectedIndex();
-            fl.setEnergyIndex(energyIndex);
-            fl.setThetaIndex(thetaIndex);
-            fl.setCountsIndex(countsIndex);
+            int icrIndex = icrBox.getSelectedIndex();
+            int ocrIndex = ocrBox.getSelectedIndex();
+
+            fl.setIndeces(energyIndex, thetaIndex, countsIndex, icrIndex, ocrIndex);
             fl.setValuesInitialised(true);
             return true;
         }

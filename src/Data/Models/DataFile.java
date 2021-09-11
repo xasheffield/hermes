@@ -19,8 +19,6 @@ import java.util.stream.Collectors;
 
 public class DataFile {
 
-    //TODO figure out how to deal with corrected theta/energy
-
     private MeasurementType fileType; // The data type of the file (I0, It, I0b, Itb)
     private String filePath; // Path to the file in the user's file system
     private String header; // Header line(s) of file
@@ -54,7 +52,6 @@ public class DataFile {
      * @return The data contained in the sample as a string, in order Energy, Theta, Cnts_per_live
      */
     public List<String> getDataAsString() {
-        //TODO design choice whether to duplicate and overload method for absorption, or add parameter
         List<String> stringData = new LinkedList<>();
             stringData.add("Energy (ev)\tTheta (deg)\tcnts_per_live");
             stringData.addAll(data.stream().map(x -> x.getEnergy() + "\t" + x.getTheta() +
@@ -128,6 +125,7 @@ public class DataFile {
         List<Double> absorption = data.stream().map(x -> x.getAbsorption()).collect(Collectors.toList());
         return absorption;
     }
+    //TODO handle corrected theta/energy
 
     /**
      * Gets all the data of one type from a DataFile
@@ -152,10 +150,6 @@ public class DataFile {
         return header;
     }
 
-    /**
-     * TODO doc
-     * @return
-     */
     public String getFileName() {
         Path filePath = Paths.get(this.getFilePath());
         return filePath.getFileName().toString();
