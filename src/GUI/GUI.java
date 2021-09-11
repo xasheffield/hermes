@@ -73,6 +73,7 @@ public class GUI extends JFrame {
     private JLabel correctedThetaSample;
     private JLabel correctedEnergySample;
     private JTextArea addSomeTextAboutTextArea;
+    private JTextField polynomialDegreeField;
 
     /**
      * Cross-tab components
@@ -444,17 +445,29 @@ public class GUI extends JFrame {
     private class GeneratePolynomialListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            //double[] coeff = dataProcessor.generatePoly((DataFile) i0List.getSelectedValue(), 3);
-            //TODO option for polynomial degree
+            // Check valid file selected
             MeasurementType type = getSelectedType();
             JList list = getList(type);
             if (list.getSelectedValuesList().size() != 1) {
-                JOptionPane.showMessageDialog(new JFrame(), "Please select one " + getSelectedType().toString() + " file.");
+                JOptionPane.showMessageDialog(new JFrame(), "Please select one " + getSelectedType().label + " file.");
                 return;
             }
+            // Parse and verify polynomial degree input
+            int polyDegree = -1;
+            try {
+                polyDegree = Integer.parseInt(polynomialDegreeField.getText());
+                if (!(polyDegree > 0)) {
+                    JOptionPane.showMessageDialog(new JFrame(), "Please enter a valid integer > 0.");
+                    return;
+                }
+            } catch (NumberFormatException nfe) {
+                JOptionPane.showMessageDialog(new JFrame(), "Please enter an integer value for polynomial degree.");
+                return;
+            }
+            //Generate and write polynomial fit file
             DataFile sourceFile = (DataFile) list.getSelectedValue();
             String fileName = JOptionPane.showInputDialog(new JFrame(), "Enter File Name");
-            DataFile polynomialFile = dataProcessor.generatePolyFile(sourceFile, fileName);
+            DataFile polynomialFile = dataProcessor.generatePolyFile(sourceFile, fileName, polyDegree);
             try {
                 //TODO tryWriteDataFile method which handles exception
                 fileWriter.writeDataFile(polynomialFile);
@@ -697,7 +710,7 @@ public class GUI extends JFrame {
 
                     }
                     DataFile calibrationFile = dataManager.getCalibrationFile();
-                    fileWriter.writeCorrectedLstFile(correctedFile, calibrationFile.getFileName(), energyMin, thetaMin, emono, thetaShift);
+                    fileWriter.writeCorrectedLstFile(correctedFile, calibrationFile.getFileName(), energyMin, thetaMin, emono, thetaShift, eObserved, eTrue);
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
                 }
