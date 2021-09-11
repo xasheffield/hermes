@@ -156,13 +156,16 @@ public class FileWriter {
      * @param thetaShift - Applied theta shift (deg)
      */
     public void writeCorrectedLstFile(DataFile correctedFile, String calibrationFileName, double calibrationEnergy, double calibrationTheta,
-                                      double eMono, double thetaShift) throws IOException {
+                                      double eMono, double thetaShift, double energyObserved, double energyTrue) throws IOException {
         List<String> toWrite = new LinkedList<>();
         toWrite.add("Calibration data file name: " + calibrationFileName);
         toWrite.add("Calibration Energy (eV): " + calibrationEnergy);
         toWrite.add("Calibration Theta (deg): " + calibrationTheta);
         toWrite.add("Emono (eV): " + eMono);
         toWrite.add("Theta Shift: " + thetaShift);
+        toWrite.add("Observed Energy (eV): " + energyObserved);
+        toWrite.add("True Energy (eV): " + energyTrue);
+
         Path path = Paths.get(correctedFile.getFilePath() + ".txt");
         Files.write(path, toWrite, StandardCharsets.UTF_8);
 
