@@ -76,11 +76,11 @@ public class DataProcessor {
      * @param sourceFile
      * @return A DataFile which samples a polynomial to get a val
      */
-    public DataFile generatePolyFile(DataFile sourceFile, String fileName) {
-        double[] coeff = generatePoly(sourceFile, 3);
+    public DataFile generatePolyFile(DataFile sourceFile, String fileName, int polyDegree) {
+        double[] coeff = generatePoly(sourceFile, polyDegree);
         String polynomialFunction = "f(x) = "; //String repesentation of polynomial function
         for (int i = 0; i < coeff.length; i++)
-            polynomialFunction += coeff[i] + "*x^" + i + " "; //TODO test
+            polynomialFunction += coeff[i] + "*x^" + i + " ";
 
         ArrayList<XRaySample> samples = new ArrayList<>();
         for (XRaySample sample: sourceFile.getData()) {

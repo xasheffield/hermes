@@ -12,6 +12,7 @@ public class XRaySample {
     private double theta; //Column 2
     private double cnts_per_live; //Column 9 ????
     private double absorption; //TODO polymorphism for absorption/corrected files?
+
     //private double energyCorrected;
     //private double thetaCorrected;
 
