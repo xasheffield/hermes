@@ -11,7 +11,10 @@ public class XRaySample {
     private double energy; //Column 1
     private double theta; //Column 2
     private double cnts_per_live; //Column 9 ????
-    private double absorption; //TODO polymorphism for absorption/corrected files?
+    private double absorption;
+    private double icrCounts;
+    private double ocrCounts;
+    private double cnts_per_live_corr;
 
     //private double energyCorrected;
     //private double thetaCorrected;
@@ -20,6 +23,28 @@ public class XRaySample {
         this.energy = formatExponents(energy);
         this.theta = formatExponents(theta);
         this.cnts_per_live = formatExponents(cnts_per_live);
+    }
+
+    public XRaySample(String energy, String theta, String cnts_per_live, String icr, String ocr) {
+        this.energy = formatExponents(energy);
+        this.theta = formatExponents(theta);
+        double rawCounts = formatExponents(cnts_per_live);
+        double icrCounts = formatExponents(icr);
+        double ocrCounts = formatExponents(ocr);
+        double correctedCounts = deadtimeCorrectCounts(rawCounts, icrCounts, ocrCounts);
+        this.cnts_per_live = correctedCounts; //TODO temporary measure, fix to be raw
+        this.cnts_per_live_corr = correctedCounts;
+    }
+
+    /**
+     * Corrects the measured counts_per_live for dead time (1st order correct counts = raw counts * icr counts / ocr counts)
+     * @param rawCounts
+     * @param icrCounts
+     * @param ocrCounts
+     * @return Corrected counts
+     */
+    private double deadtimeCorrectCounts(double rawCounts, double icrCounts, double ocrCounts) {
+        return (rawCounts * icrCounts / ocrCounts);
     }
 
     public XRaySample(Double meanEnergy, Double meanTheta, Double meanCounts) {

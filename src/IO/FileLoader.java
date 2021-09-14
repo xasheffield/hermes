@@ -54,7 +54,7 @@ public class FileLoader {
     public void setIndeces(int energy, int theta, int counts, int icr, int ocr) {
         this.energyIndex = energy;
         this.thetaIndex = theta;
-        this.countsIndex = counts; //TODO icr ocr
+        this.countsIndex = counts;
         this.icrIndex = icr;
         this.ocrIndex = ocr;
     }
@@ -94,7 +94,7 @@ public class FileLoader {
     public DataFile loadFile(MeasurementType type, File file) {
         String filePath = file.getAbsolutePath();
         String fileHeader = parseHeader(file);
-        ArrayList<XRaySample> fileMeasurements = parseMeasurements(file,energyIndex,thetaIndex,countsIndex);
+        ArrayList<XRaySample> fileMeasurements = parseMeasurements(file, energyIndex, thetaIndex, countsIndex, icrIndex, ocrIndex);
 
         DataFile loadedFile = new DataFile(type, filePath, fileHeader, fileMeasurements);
         return loadedFile;
@@ -145,7 +145,7 @@ public class FileLoader {
      * @param file
      * @return - The list of XRaySamples in the file
      */
-    private static ArrayList<XRaySample> parseMeasurements(File file, int energyIndex, int thetaIndex, int countsIndex) {
+    private static ArrayList<XRaySample> parseMeasurements(File file, int energyIndex, int thetaIndex, int countsIndex, int ocrIndex, int icrIndex) {
         LinkedList<String> fileLines = new LinkedList<>();
 
         //Read line of file which contains data
@@ -172,7 +172,10 @@ public class FileLoader {
         ArrayList<XRaySample> samples = new ArrayList<>();
         for (String line: fileLines) {
             String[] measurements = line.split("\t");
-            samples.add(new XRaySample(measurements[energyIndex], measurements[thetaIndex], measurements[countsIndex]));
+            //TODO do this in a sensible way - update xray sample to contain both corrected and uncorrected, and correct counts in constructor
+            String icr = measurements[icrIndex];
+            String ocr = measurements[ocrIndex];
+            samples.add(new XRaySample(measurements[energyIndex], measurements[thetaIndex], measurements[countsIndex], icr, ocr));
         }
         return samples;
     }
