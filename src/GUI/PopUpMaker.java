@@ -1,11 +1,26 @@
 package GUI;
+/**
+ * Handles the various pop-up windows needed, such as filechoosers and dialogs
+ */
 
 import IO.FileLoader;
+import sun.swing.FilePane;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.io.File;
+import java.util.Scanner;
 
 public class PopUpMaker {
+    GUI gui;
+    boolean listView = true;
+    String savePath = ".";
+
+    public PopUpMaker(GUI gui) {
+        this.gui = gui;
+    }
+
     /**
      * A pop-up dialog which prompts users to input correct columns to use (energy, theta, and counts)
      * @param columnNames - The names of columns in the data
@@ -66,18 +81,111 @@ public class PopUpMaker {
     }
 
     /**
-     * Open Save Dialogue
+     *
+     * @return Null if user cancels dialogue
      */
-    protected File saveDialogue(GUI gui) {
-        JFileChooser chooser = new JFileChooser(".");
-        chooser.setDialogTitle("Specify where to save your file");
+    protected File saveDialogue() {
+        JFileChooser chooser = new JFileChooser(savePath);
+        chooser.setDialogTitle("Select where to save your file");
         int userSelection = chooser.showSaveDialog(gui); //
+        File returnFile = null;
 
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             File fileToSave = chooser.getSelectedFile();
             System.out.println("Save as file: " + fileToSave.getAbsolutePath());
-            return fileToSave;
+            savePath = fileToSave.getParentFile().getAbsolutePath();
+            returnFile =  fileToSave;
         }
-        else return null;
+        return returnFile;
+    }
+
+    /**
+     * Opens an interface allowing a user to select a file from file system
+     * @return The file(s) selected by the user, in an array. Returns an empty array if no files are selected.
+     * @param fileSelection
+     * @param directorySelection
+     * @param multiSelection
+     */
+    File[] openFileChooser(boolean fileSelection, boolean directorySelection, boolean multiSelection){
+        File[] files;
+        Scanner fileIn;
+        int response;
+        JFileChooser chooser = new JFileChooser(gui.fileChooserPath);
+
+        if (fileSelection && directorySelection)
+            chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        else if (fileSelection)
+            chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        else
+            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setMultiSelectionEnabled(multiSelection);
+
+
+        //Original
+        //response = chooser.showOpenDialog(null);
+        setViewType(chooser);
+        /*
+        Action details = chooser.getActionMap().get("viewTypeDetails");
+        details.actionPerformed(null);
+      */
+
+
+        response = chooser.showOpenDialog(null);
+        if (response == JFileChooser.APPROVE_OPTION) {
+            files = chooser.getSelectedFiles();
+            gui.fileChooserPath = files[0].getParentFile().getAbsolutePath();
+            updateViewType(chooser);
+            return files;
+        }
+        updateViewType(chooser);
+        return new File[0];
+    }
+
+    private void updateViewType(JFileChooser chooser) {
+        for (Component component: chooser.getComponents()) {
+            if (component instanceof JPanel) {
+                for (Component filePane: ((JPanel) component).getComponents()) {
+                    if (filePane instanceof FilePane) {
+                        ((FilePane) filePane).getViewType();
+                        if (((FilePane)filePane).getViewType() == FilePane.VIEWTYPE_LIST)
+                            listView = true;
+                        else
+                            listView = false;
+                    }
+                }
+            }
+        }
+        System.out.println(listView);
+    }
+
+    private void setViewType(JFileChooser chooser) {
+        Action details;
+        if (listView)
+            details = chooser.getActionMap().get("viewTypeList");
+        else
+            details = chooser.getActionMap().get("viewTypeDetails");
+        details.actionPerformed(null);
+    }
+
+
+    /**
+     * Opens an interface allowing a user to select a directory
+     * @return The directory selected, or null if user cancels action
+     */
+    File directoryChooser(){
+        File saveDirectory;
+        int response;
+        JFileChooser chooser = new JFileChooser(".");
+
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setMultiSelectionEnabled(false);
+        //response = chooser.showOpenDialog(null);
+        response = chooser.showDialog(gui, "Save");
+
+        if (response == JFileChooser.APPROVE_OPTION) {
+            saveDirectory = chooser.getCurrentDirectory();
+            return saveDirectory;
+        }
+        return null;
     }
 }

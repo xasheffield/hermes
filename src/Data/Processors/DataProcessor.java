@@ -105,7 +105,6 @@ public class DataProcessor {
         return polynomialFile;
     }
 
-    //TODO theta or energy against counts? ENERGY
     /**
      *
      * @param file The source file to fit a polynomial to
@@ -141,15 +140,7 @@ public class DataProcessor {
         for (int i = 0; i < 100; i++) {
             obs.add(i,  Math.pow(i, 6) - Math.pow(i*2, 3) + 80);
         }
-        //DataFile file =
-        //ArrayList<XRaySample> samples = file.getData();
-        /*
-        for (int i = 0; i < samples.size(); i++) {
-            XRaySample sample = samples.get(i);
-            obs.add(sample.getEnergy(), sample.getCnts_per_live());
-        }
 
-         */
         // Instantiate a third-degree polynomial fitter.
         final PolynomialCurveFitter fitter = PolynomialCurveFitter.create(7);
 
@@ -251,6 +242,15 @@ public class DataProcessor {
         return new DataFile(MeasurementType.ABSORPTION, "", header,samples);
     }
 
+    /**
+     * Calculates a list of absorption values from i0, it, i0b and itb files.
+     * @param i0File
+     * @param itFile
+     * @param i0bFile
+     * @param itbFile
+     * @return ArrayList of absorption values
+     * @throws NumberFormatException
+     */
     public ArrayList<Double> calculateAbsorption(DataFile i0File, DataFile itFile, DataFile i0bFile, DataFile itbFile) throws NumberFormatException {
         //TODO method body
         List<Double> it_counts = itFile.getCounts();
@@ -331,8 +331,6 @@ public class DataProcessor {
                     file.getHeader(), samples);
             truncatedFiles.add(truncatedFile);
         }
-
-
         return truncatedFiles;
     }
 
@@ -357,7 +355,13 @@ public class DataProcessor {
             fileList.add(file);
         return truncateIfNeeded(fileList);
     }
-    
+
+    /**
+     * If the ranges of the data in the input files do not match, this function will return the files after truncating them so that
+     * only the smallest range present throughout all files remains.
+     * @param files
+     * @return Truncated Files
+     */
     public List<DataFile> truncateIfNeeded(List<DataFile> files) {
         DataFile[] filesArr = files.toArray(new DataFile[0]);
         if (!checkRanges(filesArr)) {

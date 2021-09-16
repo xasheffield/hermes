@@ -113,7 +113,7 @@
                   </component>
                   <component id="9df65" class="javax.swing.JButton" binding="resetDataButton">
                     <constraints>
-                      <grid row="4" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+                      <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
                         <preferred-size width="156" height="30"/>
                       </grid>
                     </constraints>
@@ -254,6 +254,14 @@
                         <item value="It leakage"/>
                       </model>
                       <toolTipText value="Select type of file to operate on. All buttons will operate on the selected files within the type chosen in this dropdown menu."/>
+                    </properties>
+                  </component>
+                  <component id="c4665" class="javax.swing.JButton" binding="uselessButtonButton" default-binding="true">
+                    <constraints>
+                      <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                    <properties>
+                      <text value="useless button"/>
                     </properties>
                   </component>
                 </children>
@@ -521,11 +529,6 @@
                   </component>
                 </children>
               </grid>
-              <hspacer id="266b4">
-                <constraints>
-                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                </constraints>
-              </hspacer>
             </children>
           </grid>
         </children>
@@ -538,14 +541,16 @@
         <properties/>
         <border type="none"/>
         <children>
-          <component id="bb963" class="javax.swing.JTextArea" binding="addSomeTextAboutTextArea" default-binding="true">
+          <component id="bb963" class="javax.swing.JTextArea" binding="madeIn2021ByTextArea" default-binding="true">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
                 <preferred-size width="150" height="50"/>
               </grid>
             </constraints>
             <properties>
-              <text value="Add some text about the software"/>
+              <lineWrap value="true"/>
+              <text value="Made in 2021 by Marco Seddon-Ferretti, in collaboration with Professor Neil Hyatt, Dr Martin Stennett and Lucy Immottram."/>
+              <wrapStyleWord value="true"/>
             </properties>
           </component>
         </children>

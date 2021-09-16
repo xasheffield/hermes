@@ -11,16 +11,13 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
 
 
 public class GUI extends JFrame {
@@ -33,10 +30,10 @@ public class GUI extends JFrame {
     /**
      * Data Input Tab
      */
-    private JList i0List;
-    private JList i0bList;
-    private JList itList;
-    private JList itbList;
+    private JList<DataFile> i0List;
+    private JList<DataFile> i0bList;
+    private JList<DataFile> itList;
+    private JList<DataFile> itbList;
     //Input & processing components
     private JButton loadFilesButton;
     private JButton generateMeanButton;
@@ -72,8 +69,9 @@ public class GUI extends JFrame {
     private JButton chooseFileToDefineButton;
     private JLabel correctedThetaSample;
     private JLabel correctedEnergySample;
-    private JTextArea addSomeTextAboutTextArea;
+    private JTextArea madeIn2021ByTextArea;
     private JTextField polynomialDegreeField;
+    private JButton uselessButtonButton;
 
     /**
      * Cross-tab components
@@ -94,7 +92,7 @@ public class GUI extends JFrame {
     DataManager dataManager;
     DataProcessor dataProcessor;
     Grapher grapher;
-    PopUpMaker popUpMaker = new PopUpMaker();
+    PopUpMaker popUpMaker = new PopUpMaker(this);
 
     String fileChooserPath = ".";//Initialise to current directory
 
@@ -116,6 +114,21 @@ public class GUI extends JFrame {
         grapher = new Grapher();
         addActionListeners();
         chooseFileToDefineButton.addActionListener(new ChooseCalibrationFileListener());
+
+        i0List.addMouseListener( new MouseAdapter()
+        {
+            public void mousePressed(MouseEvent e)
+            {
+                if ( SwingUtilities.isRightMouseButton(e) )
+                {
+                    JList list = (JList)e.getSource();
+                    int row = list.locationToIndex(e.getPoint());
+                    System.out.println(row);
+                    //list.setSelectedIndex(row);
+                }
+            }
+
+        });
     }
 
     private void initComponents(){
@@ -156,71 +169,8 @@ public class GUI extends JFrame {
     }
 
     //TODO move to PopUpMaker
-    /**
-     * Open Save Dialogue
-     */
-    private File saveDialogue() {
-        JFileChooser chooser = new JFileChooser(".");
-        chooser.setDialogTitle("Specify where to save your file");
-        int userSelection = chooser.showSaveDialog(this); //
-
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            File fileToSave = chooser.getSelectedFile();
-            System.out.println("Save as file: " + fileToSave.getAbsolutePath());
-            return fileToSave;
-        }
-        else return null;
-    }
 
     //TODO move to PopUpMaker
-    /**
-     * Opens an interface allowing a user to select a file from file system
-     * @return The file(s) selected by the user, in an array. Returns an empty array if no files are selected.
-     */
-    private File[] openFileChooser (boolean fileSelection, boolean directorySelection, boolean multiSelection){
-        File[] files;
-        Scanner fileIn;
-        int response;
-        JFileChooser chooser = new JFileChooser(fileChooserPath);
-
-        if (fileSelection && directorySelection)
-            chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-        else if (fileSelection)
-            chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        else
-            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setMultiSelectionEnabled(multiSelection);
-        response = chooser.showOpenDialog(null);
-
-        if (response == JFileChooser.APPROVE_OPTION) {
-            files = chooser.getSelectedFiles();
-            fileChooserPath = files[0].getParentFile().getAbsolutePath();
-            return files;
-        }
-        return new File[0];
-    }
-
-    //TODO move to PopUpMaker
-    /**
-     * Opens an interface allowing a user to select a directory
-     * @return The directory selected, or null if user cancels action
-     */
-    private File directoryChooser(){
-        File saveDirectory;
-        int response;
-        JFileChooser chooser = new JFileChooser(".");
-
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setMultiSelectionEnabled(false);
-        //response = chooser.showOpenDialog(null);
-        response = chooser.showDialog(this, "Save");
-
-        if (response == JFileChooser.APPROVE_OPTION) {
-            saveDirectory = chooser.getCurrentDirectory();
-            return saveDirectory;
-        }
-        return null;
-    }
 
     private void createUIComponents() {
         // TODO: place custom component creation code here
@@ -334,7 +284,7 @@ public class GUI extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            File[] filesToLoad = openFileChooser(true, false, true);
+            File[] filesToLoad = popUpMaker.openFileChooser(true, false, true);
             if (filesToLoad.length == 0) { //If no files are found, return and print an error
                 System.out.println("No files have been selected");
                 return;
@@ -560,7 +510,9 @@ public class GUI extends JFrame {
                 return;
             absorptionFile.setHeader(header);
             try {
-                File file = popUpMaker.saveDialogue(gui);
+                File file = popUpMaker.saveDialogue();
+                if (file == null) //Null if user cancelled save dialogue
+                    return;
                 absorptionFile.setFilePath(file.getAbsolutePath());
 
                 ArrayList<DataFile> sourceFiles = new ArrayList<>();
@@ -629,7 +581,6 @@ public class GUI extends JFrame {
             double emono = energyMin * Math.sin(Math.toRadians(thetaMin)); //Calculate monochromator energy from  values in GUI
             JOptionPane.showMessageDialog(new JFrame(), "Emono (eV): " + emono);
 
-
             double eObserved = -1;
             double eTrue = -1;
             while (eObserved == -1 || eTrue == -1)  {
@@ -651,7 +602,7 @@ public class GUI extends JFrame {
 
             ArrayList<DataFile> correctedFiles = new ArrayList<>();
             //File saveDir = saveDialogue();
-            File saveDir = directoryChooser();
+            File saveDir = popUpMaker.directoryChooser();
             String savePath;
             try {
                 savePath = saveDir.getAbsolutePath();
@@ -716,7 +667,6 @@ public class GUI extends JFrame {
                 }
                 grapher.displayCompareGraph(file, DataType.ENERGY, DataType.ABSORPTION, correctedFile, DataType.ENERGY_CORRECTED, DataType.ABSORPTION);
                 grapher.displayCompareGraph(file, DataType.THETA, DataType.ABSORPTION, correctedFile, DataType.THETA_CORRECTED, DataType.ABSORPTION);
-                //TODO case split for has/doesn't have background
 
                 //TODO plot Absorption vs original theta, vs original energy
                 //Absorption vs corrected theta, vs corrected energy
