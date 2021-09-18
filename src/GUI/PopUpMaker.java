@@ -81,8 +81,7 @@ public class PopUpMaker {
     }
 
     /**
-     *
-     * @return Null if user cancels dialogue
+     * @return Absolute path to file, with file extension omitted (e.g. "C:/Users/user/Folder/File"). Null if user cancels dialogue
      */
     protected File saveDialogue() {
         JFileChooser chooser = new JFileChooser(savePath);
@@ -175,7 +174,7 @@ public class PopUpMaker {
     File directoryChooser(){
         File saveDirectory;
         int response;
-        JFileChooser chooser = new JFileChooser(".");
+        JFileChooser chooser = new JFileChooser(savePath);
 
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setMultiSelectionEnabled(false);

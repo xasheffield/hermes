@@ -256,12 +256,12 @@
                       <toolTipText value="Select type of file to operate on. All buttons will operate on the selected files within the type chosen in this dropdown menu."/>
                     </properties>
                   </component>
-                  <component id="c4665" class="javax.swing.JButton" binding="uselessButtonButton" default-binding="true">
+                  <component id="c4665" class="javax.swing.JButton" binding="resetSelectedButton" default-binding="true">
                     <constraints>
                       <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
-                      <text value="useless button"/>
+                      <text value="Reset selected"/>
                     </properties>
                   </component>
                 </children>
@@ -541,7 +541,7 @@
         <properties/>
         <border type="none"/>
         <children>
-          <component id="bb963" class="javax.swing.JTextArea" binding="madeIn2021ByTextArea" default-binding="true">
+          <component id="bb963" class="javax.swing.JTextArea" binding="developedIn2021ByTextArea" default-binding="true">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
                 <preferred-size width="150" height="50"/>
@@ -549,7 +549,7 @@
             </constraints>
             <properties>
               <lineWrap value="true"/>
-              <text value="Made in 2021 by Marco Seddon-Ferretti, in collaboration with Professor Neil Hyatt, Dr Martin Stennett and Lucy Immottram."/>
+              <text value="Developed in 2021 by Marco Seddon-Ferretti, in collaboration with Professor Neil Hyatt, Dr Martin Stennett and Lucy Immottram. "/>
               <wrapStyleWord value="true"/>
             </properties>
           </component>

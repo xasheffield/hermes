@@ -4,7 +4,9 @@
  */
 package Data.Models;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class DataManager {
@@ -48,6 +50,17 @@ public class DataManager {
         ArrayList<String> fileNames = (ArrayList<String>) files.stream().map(
                                     datafile -> datafile.getFileName()).collect(Collectors.toList());
         return fileNames;
+    }
+
+    /**
+     * Clears all files of a given type
+     * @param type
+     */
+    public void clearFiles(MeasurementType type, List<DataFile> files) {
+        ArrayList<DataFile> fileList = getList(type);
+        for (DataFile file: files) {
+            fileList.remove(file);
+        }
     }
 
     /**

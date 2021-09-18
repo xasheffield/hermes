@@ -21,6 +21,8 @@ import java.util.List;
 
 
 public class GUI extends JFrame {
+    private final String ICON_PATH = "resources/hermes_logo.png";
+
     private JPanel basePanel; //TODO remove?
     private JPanel controlPanel; //TODO remove?
 
@@ -53,10 +55,10 @@ public class GUI extends JFrame {
     private JScrollPane absitPane;
     private JScrollPane absitbPane;
     private JScrollPane absi0bPane;
-    private JList absorptioni0List; //JLists in absorption tab, share model with lists from Data Input
-    private JList absorptioni0bList;
-    private JList absorptionitList;
-    private JList absorptionitbList;
+    private JList<DataFile> absorptioni0List; //JLists in absorption tab, share model with lists from Data Input
+    private JList<DataFile> absorptioni0bList;
+    private JList<DataFile> absorptionitList;
+    private JList<DataFile> absorptionitbList;
     private JCheckBox leakageIsSignificantCheckBox;
     private JButton plotAbsorptionButton;
     private JButton generateAbsorptionFileButton;
@@ -69,9 +71,9 @@ public class GUI extends JFrame {
     private JButton chooseFileToDefineButton;
     private JLabel correctedThetaSample;
     private JLabel correctedEnergySample;
-    private JTextArea madeIn2021ByTextArea;
+    private JTextArea developedIn2021ByTextArea;
     private JTextField polynomialDegreeField;
-    private JButton uselessButtonButton;
+    private JButton resetSelectedButton;
 
     /**
      * Cross-tab components
@@ -115,6 +117,8 @@ public class GUI extends JFrame {
         addActionListeners();
         chooseFileToDefineButton.addActionListener(new ChooseCalibrationFileListener());
 
+        this.setIconImage(Toolkit.getDefaultToolkit().getImage(ICON_PATH));
+
         i0List.addMouseListener( new MouseAdapter()
         {
             public void mousePressed(MouseEvent e)
@@ -128,6 +132,27 @@ public class GUI extends JFrame {
                 }
             }
 
+        });
+        resetSelectedButton.addActionListener(new ActionListener() {
+            /**
+             * Invoked when an action occurs.
+             *
+             * @param e the event to be processed
+             */
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                MeasurementType typeToClear = MeasurementType.labelToValue((String) measurementTypeComboBox.getSelectedItem());
+                JList<DataFile> listToClear = getList(typeToClear);
+                List<DataFile> filesToClear = listToClear.getSelectedValuesList();
+
+                int result = JOptionPane.showConfirmDialog(new JFrame(), "Are you sure you would like to clear all selected "
+                        + typeToClear.label + " files?"); //TODO option to hide this message in future?
+                if (result == JOptionPane.YES_OPTION) {
+                    ((DefaultListModel) getList(typeToClear).getModel()).removeAllElements();
+                    dataManager.clearFiles(typeToClear, filesToClear);
+                    updateModel(typeToClear, listToClear);
+                }
+            }
         });
     }
 
@@ -245,7 +270,7 @@ public class GUI extends JFrame {
      * @param type MeasurementType of list to retrieve
      * @return JList object containing DataFiles
      */
-    private JList getList(MeasurementType type) {
+    private JList<DataFile> getList(MeasurementType type) {
         switch (type) {
             case I0: return i0List;
             case I0b: return i0bList;
@@ -601,8 +626,8 @@ public class GUI extends JFrame {
             }
 
             ArrayList<DataFile> correctedFiles = new ArrayList<>();
-            //File saveDir = saveDialogue();
-            File saveDir = popUpMaker.directoryChooser();
+            File saveDir = popUpMaker.saveDialogue().getParentFile();
+            //File saveDir = popUpMaker.directoryChooser(); TODO decide which is better
             String savePath;
             try {
                 savePath = saveDir.getAbsolutePath();
@@ -615,9 +640,8 @@ public class GUI extends JFrame {
             //TODO move most code into DataProcessor
             double thetaObserved = Math.asin(emono / eObserved);
             double thetaTrue = Math.asin(emono / eTrue);
-            double thetaShift = Math.toDegrees(thetaTrue - thetaObserved); //TODO which way round is this?
+            double thetaShift = Math.toDegrees(thetaTrue - thetaObserved);
             JOptionPane.showMessageDialog(new JFrame(), "Theta shift (deg) = " + thetaShift);
-
 
 
             for (DataFile file: filesToCorrect) {
@@ -671,13 +695,6 @@ public class GUI extends JFrame {
                 //TODO plot Absorption vs original theta, vs original energy
                 //Absorption vs corrected theta, vs corrected energy
             }
-            /*
-            grapher.displayGraph((ArrayList<DataFile>) filesToCorrect, DataType.ENERGY, DataType.ABSORPTION);
-            grapher.displayGraph((ArrayList<DataFile>) correctedFiles, DataType.ENERGY_CORRECTED, DataType.ABSORPTION);
-            grapher.displayGraph((ArrayList<DataFile>) filesToCorrect, DataType.THETA, DataType.ABSORPTION);
-            grapher.displayGraph((ArrayList<DataFile>) correctedFiles, DataType.THETA_CORRECTED, DataType.ABSORPTION);
-
-             */
         }
 
 
