@@ -117,7 +117,8 @@ public class GUI extends JFrame {
         addActionListeners();
         chooseFileToDefineButton.addActionListener(new ChooseCalibrationFileListener());
 
-        this.setIconImage(Toolkit.getDefaultToolkit().getImage(ICON_PATH));
+        //this.setIconImage(Toolkit.getDefaultToolkit().getImage(ICON_PATH));
+        this.setIconImage(new ImageIcon(getClass().getClassLoader().getResource(ICON_PATH)).getImage());
 
         i0List.addMouseListener( new MouseAdapter()
         {
@@ -177,7 +178,7 @@ public class GUI extends JFrame {
         plotAbsorptionButton.addActionListener(new PlotAbsorptionListener());
         rootTabPane.addComponentListener(new ComponentAdapter() {});
         rootTabPane.addChangeListener(new ChangeTabListener());
-        leakageIsSignificantCheckBox.addActionListener(new SignificantLeakageListener());
+        leakageIsSignificantCheckBox.addActionListener(new SignificantLeakageListener(this));
         generateAbsorptionFileButton.addActionListener(new GenerateAbsorptionListener(this));
         initiateCalibrationButton.addActionListener(new CorrectScaleListener());
     }
@@ -330,20 +331,23 @@ public class GUI extends JFrame {
             MeasurementType fileType = getSelectedType();
 
             //Load files and store in DataManager
-            ArrayList<DataFile> loadedFiles = fileLoader.loadFiles(fileType, filesToLoad);
-            if (!dataProcessor.checkRanges(loadedFiles.toArray(new DataFile[0]))) {
-                JOptionPane.showMessageDialog(new JFrame(), "File ranges do not match.");
+            try {
+                ArrayList<DataFile> loadedFiles = fileLoader.loadFiles(fileType, filesToLoad);
+                if (!dataProcessor.checkRanges(loadedFiles.toArray(new DataFile[0]))) {
+                    JOptionPane.showMessageDialog(new JFrame(), "File ranges do not match.");
+                }
+                dataManager.addFiles(loadedFiles, fileType);
+
+                //Set model of corresponding list
+                JList listToUpdate = getList(fileType);
+
+                //Get and update appropriate list model
+                DefaultListModel model = (DefaultListModel) listToUpdate.getModel();
+                updateModel(fileType, listToUpdate);
+            } catch (ArrayIndexOutOfBoundsException aie) { //Thrown if there is an error parsing the files because they do not share a common data format
+                JOptionPane.showMessageDialog(new JFrame(), "Error loading files. Check that all selected files share a common data format.");
             }
-            dataManager.addFiles(loadedFiles, fileType);
 
-            //Set model of corresponding list
-            JList listToUpdate = getList(fileType);
-
-            //Get and update appropriate list model
-            DefaultListModel model = (DefaultListModel) listToUpdate.getModel();
-            updateModel(fileType, listToUpdate);
-            //loadedFiles.stream().forEach(file -> model.addElement(file));
-            //pack();
         }
     }
 
@@ -575,6 +579,12 @@ public class GUI extends JFrame {
     }
 
     private class SignificantLeakageListener implements ActionListener {
+        GUI gui;
+
+        public SignificantLeakageListener(GUI gui) {
+            this.gui = gui;
+        }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             if (leakageIsSignificantCheckBox.isSelected()) {
@@ -588,6 +598,7 @@ public class GUI extends JFrame {
                 absorptionitbList.clearSelection();
             }
             pack(); //TODO test what having this commented out does - answer: invisible panels, needs to be repacked
+            gui.setLocationRelativeTo(null);
         }
     }
 
@@ -626,7 +637,9 @@ public class GUI extends JFrame {
             }
 
             ArrayList<DataFile> correctedFiles = new ArrayList<>();
-            File saveDir = popUpMaker.saveDialogue().getParentFile();
+            File fileName = popUpMaker.saveDialogue();
+            System.out.println(fileName);
+            File saveDir = fileName.getParentFile();
             //File saveDir = popUpMaker.directoryChooser(); TODO decide which is better
             String savePath;
             try {
@@ -672,6 +685,8 @@ public class GUI extends JFrame {
                     copySample.setCorrected(correctedEnergy, correctedTheta);
                     correctedSamples.add(copySample);
                 }
+                //TODO check if a file with the same name exists already in the save directory, if so use regex to determine versions and increment counter (e.g. abc_corr, abc_corr1, abc_corr2)
+                //
                 correctedFile = new DataFile(file.getFileType(), savePath + System.getProperty("file.separator") + file.getFileName() + "_corr", "", correctedSamples);
                 correctedFiles.add(correctedFile);
                 try {

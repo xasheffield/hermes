@@ -1,6 +1,6 @@
 package GUI;
 /**
- * Handles the various pop-up windows needed, such as filechoosers and dialogs
+ * Handles the various pop-up windows needed, such as FileChoosers and Dialogs
  */
 
 import IO.FileLoader;
@@ -83,11 +83,14 @@ public class PopUpMaker {
     /**
      * @return Absolute path to file, with file extension omitted (e.g. "C:/Users/user/Folder/File"). Null if user cancels dialogue
      */
-    protected File saveDialogue() {
+    protected File saveDialogue(String suggested_name) {
         JFileChooser chooser = new JFileChooser(savePath);
         chooser.setDialogTitle("Select where to save your file");
+        chooser.setSelectedFile(new File(suggested_name));
+
         int userSelection = chooser.showSaveDialog(gui); //
         File returnFile = null;
+
 
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             File fileToSave = chooser.getSelectedFile();
@@ -96,6 +99,10 @@ public class PopUpMaker {
             returnFile =  fileToSave;
         }
         return returnFile;
+    }
+
+    protected File saveDialogue() {
+        return saveDialogue("");
     }
 
     /**

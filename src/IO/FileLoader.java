@@ -91,11 +91,10 @@ public class FileLoader {
      * @param file The file to load data from
      * @return Returns a DataFile object representing the loaded file
      */
-    public DataFile loadFile(MeasurementType type, File file) {
+    public DataFile loadFile(MeasurementType type, File file) throws ArrayIndexOutOfBoundsException {
         String filePath = file.getAbsolutePath();
-        String fileHeader = parseHeader(file);
+    String fileHeader = parseHeader(file);
         ArrayList<XRaySample> fileMeasurements = parseMeasurements(file, energyIndex, thetaIndex, countsIndex, icrIndex, ocrIndex);
-
         DataFile loadedFile = new DataFile(type, filePath, fileHeader, fileMeasurements);
         return loadedFile;
     }
@@ -106,7 +105,7 @@ public class FileLoader {
      * @param files
      * @return ArrayList of loaded DataFile objects
      */
-    public ArrayList<DataFile> loadFiles(MeasurementType dataType, File... files) {
+    public ArrayList<DataFile> loadFiles(MeasurementType dataType, File... files) throws ArrayIndexOutOfBoundsException {
         ArrayList<DataFile> loadedFiles = new ArrayList<>();
         for (File file: files) {
             loadedFiles.add(loadFile(dataType, file));
@@ -145,7 +144,8 @@ public class FileLoader {
      * @param file
      * @return - The list of XRaySamples in the file
      */
-    private static ArrayList<XRaySample> parseMeasurements(File file, int energyIndex, int thetaIndex, int countsIndex, int ocrIndex, int icrIndex) {
+    private static ArrayList<XRaySample> parseMeasurements(File file, int energyIndex, int thetaIndex, int countsIndex, int ocrIndex, int icrIndex)
+    throws ArrayIndexOutOfBoundsException {
         LinkedList<String> fileLines = new LinkedList<>();
 
         //Read line of file which contains data
@@ -173,9 +173,9 @@ public class FileLoader {
         for (String line: fileLines) {
             String[] measurements = line.split("\t");
             //TODO do this in a sensible way - update xray sample to contain both corrected and uncorrected, and correct counts in constructor
-            String icr = measurements[icrIndex];
-            String ocr = measurements[ocrIndex];
-            samples.add(new XRaySample(measurements[energyIndex], measurements[thetaIndex], measurements[countsIndex], icr, ocr));
+                String icr = measurements[icrIndex];
+                String ocr = measurements[ocrIndex];
+                samples.add(new XRaySample(measurements[energyIndex], measurements[thetaIndex], measurements[countsIndex], icr, ocr));
         }
         return samples;
     }
