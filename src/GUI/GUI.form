@@ -262,6 +262,7 @@
                     </constraints>
                     <properties>
                       <text value="Reset selected"/>
+                      <toolTipText value="Resets highlighted files of the  selected Measurement Type"/>
                     </properties>
                   </component>
                 </children>

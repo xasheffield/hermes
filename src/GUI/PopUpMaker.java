@@ -147,6 +147,11 @@ public class PopUpMaker {
         return new File[0];
     }
 
+    /**
+     * Saves the view type selected by user for a pop up, so that future pop ups will be initialised in that same view
+     * by default.
+     * @param chooser
+     */
     private void updateViewType(JFileChooser chooser) {
         for (Component component: chooser.getComponents()) {
             if (component instanceof JPanel) {
@@ -164,13 +169,18 @@ public class PopUpMaker {
         System.out.println(listView);
     }
 
+    /**
+     * Sets the view type of a pop up to that previously selected by the user.
+     * @param chooser
+     */
     private void setViewType(JFileChooser chooser) {
         Action details;
         if (listView)
             details = chooser.getActionMap().get("viewTypeList");
         else
             details = chooser.getActionMap().get("viewTypeDetails");
-        details.actionPerformed(null);
+        if (details != null)
+            details.actionPerformed(null);
     }
 
 
