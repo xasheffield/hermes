@@ -5,6 +5,7 @@ import Data.Processors.DataProcessor;
 import Graphing.Grapher;
 import IO.FileLoader;
 import IO.FileWriter;
+import GUI.TextFields;
 import org.jfree.chart.ChartPanel;
 
 import javax.swing.*;
@@ -71,9 +72,10 @@ public class GUI extends JFrame {
     private JButton chooseFileToDefineButton;
     private JLabel correctedThetaSample;
     private JLabel correctedEnergySample;
-    private JTextArea developedIn2021ByTextArea;
+    private JTextArea aboutTextField;
     private JTextField polynomialDegreeField;
     private JButton resetSelectedButton;
+    private JTextArea licenceText;
 
     /**
      * Cross-tab components
@@ -105,6 +107,7 @@ public class GUI extends JFrame {
         this.pack();
         this.setContentPane(rootTabPane);
         this.synchroniseLists();
+        this.loadText();
 
         /**
          * Initialise IO, Data and Grapher
@@ -120,6 +123,7 @@ public class GUI extends JFrame {
         //this.setIconImage(Toolkit.getDefaultToolkit().getImage(ICON_PATH));
         this.setIconImage(new ImageIcon(getClass().getClassLoader().getResource(ICON_PATH)).getImage());
 
+        /*
         i0List.addMouseListener( new MouseAdapter()
         {
             public void mousePressed(MouseEvent e)
@@ -134,6 +138,8 @@ public class GUI extends JFrame {
             }
 
         });
+         */
+
         resetSelectedButton.addActionListener(new ActionListener() {
             /**
              * Invoked when an action occurs.
@@ -155,6 +161,11 @@ public class GUI extends JFrame {
                 }
             }
         });
+    }
+
+    private void loadText() {
+        aboutTextField.setText(TextFields.aboutText);
+        licenceText.setText(TextFields.licenceText);
     }
 
     private void initComponents(){

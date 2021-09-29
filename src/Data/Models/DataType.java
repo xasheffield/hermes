@@ -1,9 +1,12 @@
 package Data.Models;
+import sun.swing.*;
+/* Using eclipse compiler instead of javac allows this to recognise the import,
+ * even if --release is checked */
 
 public enum DataType {
     ENERGY("Energy (eV)"),
     THETA("Theta (deg)"),
-    COUNTS_PER_LIVE("Counts per live"),
+    COUNTS_PER_LIVE("Deadtime Corrected Counts"),//TODO actually correct the counts
     ABSORPTION("Absorption (mu.x)"),
     ENERGY_CORRECTED ("Energy Corrected (eV)"),
     THETA_CORRECTED ("Theta Corrected (deg)"),

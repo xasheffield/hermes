@@ -1,7 +1,6 @@
 package IO;
 /**
  * Reads x-ray data files (text files) and stores the contents as DataFile objects.
- * @author Marco Seddon-Ferretti
  */
 
 import Data.Models.DataFile;
@@ -75,9 +74,11 @@ public class FileLoader {
                     if (columnNames.length == 0) {
                         JOptionPane.showMessageDialog(new JFrame(), "Unable to find any data columns");
                     }
+                    scanner.close();
                     return columnNames;
                 }
             }
+            scanner.close();
         } catch (FileNotFoundException fnfe) {
             fnfe.printStackTrace();
             System.out.println("Could not locate file: " + file.getName());
@@ -127,8 +128,10 @@ public class FileLoader {
                 // Read lines until data separator (*)
                 if (!line.contains("***"))  //Only read the actual data lines
                     header += line;
-                else
+                else {
+                    scanner.close();
                     break;
+                }
             }
 
         } catch (FileNotFoundException fnfe) {
@@ -156,13 +159,14 @@ public class FileLoader {
                 String line = scanner.nextLine();
                 if (line.contains("***")) {
                     scanner.nextLine(); // skip column names line
-                    //TODO janky fix, make it check for numbers -   line.contains(({0-9}.\t{0.9}) maybe;
+                    //TODO better implementation, make it check for numbers -   line.contains(({0-9}.\t{0.9}) maybe;
                     break;
                 }
             }
             while (scanner.hasNextLine()) {
                 fileLines.add(scanner.nextLine());
             }
+            scanner.close();
         } catch (FileNotFoundException fnfe) {
             fnfe.printStackTrace();
             System.out.println("Could not locate file: " + file.getName());

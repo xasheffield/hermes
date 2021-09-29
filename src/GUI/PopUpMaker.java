@@ -179,7 +179,7 @@ public class PopUpMaker {
             details = chooser.getActionMap().get("viewTypeList");
         else
             details = chooser.getActionMap().get("viewTypeDetails");
-        if (details != null)
+        if (details != null) // TODO replace with operating system check for clarity
             details.actionPerformed(null);
     }
 

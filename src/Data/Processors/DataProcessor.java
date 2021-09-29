@@ -19,7 +19,8 @@ public class DataProcessor {
     private final String LSTFILE = ".lst";
 
     /**
-     *
+     * Generates a mean file containing counts_per_live, theta and energy, from a list of files.
+     * Assumes truncation has already been applied to the input files such that the data ranges match.
      * @param dataType - Type of file (I0, It, Itb, I0b)
      * @param fileName name of file (including extension)
      * @param fileHeader - Header of mean file
@@ -27,12 +28,6 @@ public class DataProcessor {
      * @return mean data file generated from inputs
      */
     public DataFile generateMean(MeasurementType dataType, String fileName, String fileHeader, DataFile... files){
-        //TODO method body
-        /*
-        for (DataFile file: files){
-            System.out.println(file.getFilePath());
-        }
-         */
         //TODO Better way of iterating through samples
         DataFile firstFile = files[0];
         int sampleNumber = firstFile.getData().size();
@@ -252,7 +247,6 @@ public class DataProcessor {
      * @throws NumberFormatException
      */
     public ArrayList<Double> calculateAbsorption(DataFile i0File, DataFile itFile, DataFile i0bFile, DataFile itbFile) throws NumberFormatException {
-        //TODO method body
         List<Double> it_counts = itFile.getCounts();
         Iterator<Double> i0 = i0File.getCounts().iterator();
         Iterator<Double> it = itFile.getCounts().iterator();
