@@ -1,15 +1,15 @@
 import GUI.*;
 import com.apple.eawt.Application;
-import org.apache.commons.*;
-
 import javax.swing.*;
 import java.awt.*;
 
 public class Main {
 
     private static final String OPERATING_SYSTEM = System.getProperty("os.name");
+
     public static void main(String[] args) {
 
+        // Change name and dock icon for MacOS
         if (OPERATING_SYSTEM.startsWith("Mac")) {
             System.setProperty("apple.awt.application.name", "Hermes"); //Update application name - must be done before any swing is used
             Application application = Application.getApplication();
@@ -37,6 +37,7 @@ public class Main {
             e.printStackTrace();
         }
 
+        // Start GUI
         GUI gui = new GUI("Hermes");
     }
 
