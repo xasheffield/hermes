@@ -1,7 +1,4 @@
 package Data.Models;
-import sun.swing.*;
-/* Using eclipse compiler instead of javac allows this to recognise the import,
- * even if --release is checked */
 
 public enum DataType {
     ENERGY("Energy (eV)"),

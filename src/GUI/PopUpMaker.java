@@ -4,7 +4,9 @@ package GUI;
  */
 
 import IO.FileLoader;
-import sun.swing.FilePane;
+//import sun.swing.FilePane;
+/* Using eclipse compiler instead of javac allows this to recognise the import,
+ * even if --release is checked. Only accessible on Java <= 8*/
 
 import javax.swing.*;
 import java.awt.*;
@@ -125,25 +127,16 @@ public class PopUpMaker {
         else
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setMultiSelectionEnabled(multiSelection);
-
-
-        //Original
-        //response = chooser.showOpenDialog(null);
         setViewType(chooser);
-        /*
-        Action details = chooser.getActionMap().get("viewTypeDetails");
-        details.actionPerformed(null);
-      */
 
 
         response = chooser.showOpenDialog(null);
+        updateViewType(chooser);
         if (response == JFileChooser.APPROVE_OPTION) {
             files = chooser.getSelectedFiles();
             gui.fileChooserPath = files[0].getParentFile().getAbsolutePath();
-            updateViewType(chooser);
             return files;
         }
-        updateViewType(chooser);
         return new File[0];
     }
 
@@ -156,6 +149,7 @@ public class PopUpMaker {
         for (Component component: chooser.getComponents()) {
             if (component instanceof JPanel) {
                 for (Component filePane: ((JPanel) component).getComponents()) {
+                    /*
                     if (filePane instanceof FilePane) {
                         ((FilePane) filePane).getViewType();
                         if (((FilePane)filePane).getViewType() == FilePane.VIEWTYPE_LIST)
@@ -163,6 +157,9 @@ public class PopUpMaker {
                         else
                             listView = false;
                     }
+
+                     */
+                    int a = 0;
                 }
             }
         }

@@ -107,15 +107,15 @@ public class FileWriter {
         //Add i0 and it counts per live columns
         Iterator<Double> i0Iter = i0.getCounts().iterator();
         Iterator<Double> itIter = it.getCounts().iterator();
-        Iterator<Double> i0bIter = i0.getCounts().iterator();
-        Iterator<Double> itbIter = it.getCounts().iterator();
+        Iterator<Double> i0bIter = i0b.getCounts().iterator();
+        Iterator<Double> itbIter = itb.getCounts().iterator();
         for (int i = 0; i < data.size(); i++) {
             Double itCount = itIter.next();
             Double itbCount = itbIter.next();
             Double i0Count = i0Iter.next();
             Double i0bCount = i0bIter.next();
 
-            String extraData = i0Count + "\t" + itCount + "\t" + (i0Count - i0bCount) + "\t" + (itCount - itbCount) + "\t" + i0bCount + itbCount;
+            String extraData = i0Count + "\t" + itCount + "\t" + (i0Count - i0bCount) + "\t" + (itCount - itbCount) + "\t" + i0bCount + "\t" + itbCount;
             data.set(i, data.get(i) + extraData);
         }
 
