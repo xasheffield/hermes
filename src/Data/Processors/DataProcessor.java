@@ -196,7 +196,6 @@ public class DataProcessor {
             double itCounts = itFile.getData(DataType.COUNTS_PER_LIVE).get(i);
 
             samples.add(new ProcessedSample(energy, theta, counts, absorption, i0Counts, itCounts));
-            //samples.add(new XRaySample(source.getEnergy(), source.getTheta(), source.getCnts_per_live(), absorptionList.get(i)));
         }
         return new DataFile(MeasurementType.ABSORPTION, "", header,samples);
     }
@@ -229,10 +228,7 @@ public class DataProcessor {
             double i0bCounts =  i0bFile.getData(DataType.COUNTS_PER_LIVE).get(i);
             double itbCounts = itbFile.getData(DataType.COUNTS_PER_LIVE).get(i);
 
-
             samples.add(new ProcessedSample(energy, theta, counts, absorption, i0Counts, itCounts, i0bCounts, itbCounts));
-
-            //samples.add(new XRaySample(source.getEnergy(), source.getTheta(), source.getCnts_per_live(), absorption.get(i)));
         }
         return new DataFile(MeasurementType.ABSORPTION, "", header,samples);
     }

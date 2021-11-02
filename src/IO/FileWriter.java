@@ -3,6 +3,7 @@ package IO;
 import Data.Models.DataFile;
 import Data.Models.DataType;
 
+import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -34,7 +35,8 @@ public class FileWriter {
 
     /**
      * Writes a DataFile out as a .dat file
-     * @param file The file to write out
+     * @param file The file to be written out
+     * @param types The DataTypes to include in the file
      */
     public void writeDataFile(DataFile file, DataType... types) throws IOException {
         String header = file.getHeader();
@@ -49,7 +51,7 @@ public class FileWriter {
     /**
      *
      */
-    public void writeAbsorptionFile(DataFile file) throws IOException {
+    public void writeAbsborptionFile(DataFile file) throws IOException {
         String header = file.getHeader();
         List<String> data = file.getDataAsString(DataType.ENERGY, DataType.THETA, DataType.ABSORPTION);
         data.add(0, fileSeparator);
@@ -73,7 +75,7 @@ public class FileWriter {
         columnNames += "i0\tit\t";
         data.remove(0);
 
-        //Add i0 and it counts per live columns
+        //Add i0 and it columns
         Iterator<Double> i0Iter = i0.getCounts().iterator();
         Iterator<Double> itIter = it.getCounts().iterator();
         for (int i = 0; i < data.size(); i++) {
@@ -101,7 +103,9 @@ public class FileWriter {
         String header = absorption.getHeader();
         List<String> data = absorption.getDataAsString(DataType.ENERGY, DataType.THETA, DataType.ABSORPTION);
         String columnNames = data.get(0);
-        columnNames += "i0\tit\ti0 - i0b\tit - itb\ti0b\titb";
+        columnNames += DataType.I0.label + "\t" + DataType.IT.label +"\t";
+        columnNames += DataType.I0CORRECTED.label + "\t" + DataType.ITCORRECTED.label +"\t";
+        columnNames += DataType.I0B.label + "\t" + DataType.ITB.label;
         data.remove(0);
 
         //Add i0 and it counts per live columns

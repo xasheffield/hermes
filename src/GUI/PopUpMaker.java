@@ -5,8 +5,7 @@ package GUI;
 
 import IO.FileLoader;
 //import sun.swing.FilePane;
-/* Using eclipse compiler instead of javac allows this to recognise the import,
- * even if --release is checked. Only accessible on Java <= 8*/
+/* Only accessible on Java <= 8*/
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,7 +23,7 @@ public class PopUpMaker {
     }
 
     /**
-     * A pop-up dialog which prompts users to input correct columns to use (energy, theta, and counts)
+     * A pop-up dialog which prompts users to input correct columns to use (energy, theta, counts, ICR, OCR)
      * @param columnNames - The names of columns in the data
      * @param fl - FileLoader, in order to set the column indeces
      */
@@ -39,8 +38,6 @@ public class PopUpMaker {
         JLabel cLabel = new JLabel("Counts");
         JLabel icrLabel = new JLabel("ICR");
         JLabel ocrLabel = new JLabel("OCR");
-
-        //TODO add OCR/ICR
 
         Object[] options = new Object[] {energyBox, thetaBox, countsBox, icrBox, ocrBox};
 
@@ -118,7 +115,7 @@ public class PopUpMaker {
         File[] files;
         Scanner fileIn;
         int response;
-        JFileChooser chooser = new JFileChooser(gui.fileChooserPath);
+        JFileChooser chooser = new JFileChooser(savePath);
 
         if (fileSelection && directorySelection)
             chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
@@ -134,7 +131,7 @@ public class PopUpMaker {
         updateViewType(chooser);
         if (response == JFileChooser.APPROVE_OPTION) {
             files = chooser.getSelectedFiles();
-            gui.fileChooserPath = files[0].getParentFile().getAbsolutePath();
+            savePath = files[0].getParentFile().getAbsolutePath();
             return files;
         }
         return new File[0];

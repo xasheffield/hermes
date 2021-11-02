@@ -5,7 +5,6 @@ import Data.Processors.DataProcessor;
 import Graphing.Grapher;
 import IO.FileLoader;
 import IO.FileWriter;
-import GUI.TextFields;
 import org.jfree.chart.ChartPanel;
 
 import javax.swing.*;
@@ -79,7 +78,7 @@ public class GUI extends JFrame {
 
     /**
      * Cross-tab components
-     * TODO dry
+     * TODO dry, parameterise list models
      */
     private DefaultListModel i0Model = (DefaultListModel) i0List.getModel();
     private DefaultListModel i0bModel = (DefaultListModel) i0bList.getModel();
@@ -91,14 +90,12 @@ public class GUI extends JFrame {
     /**
      * Classes providing I0, Data Processing, and Graphing functionality
      */
-    FileLoader fileLoader;
-    FileWriter fileWriter;
-    DataManager dataManager;
-    DataProcessor dataProcessor;
-    Grapher grapher;
-    PopUpMaker popUpMaker = new PopUpMaker(this);
-
-    String fileChooserPath = ".";//Initialise to current directory
+    FileLoader fileLoader; // Loads files from filesystem
+    FileWriter fileWriter; // Writes out user-generated files
+    DataManager dataManager; // Encapsulates the currently loaded data
+    DataProcessor dataProcessor; // Operates on loaded data and can generate new data
+    Grapher grapher; // Plots DataFiles
+    PopUpMaker popUpMaker = new PopUpMaker(this); // Handles pop-up interfaces such as save diaogues
 
     public GUI(String title) {
         super(title);
@@ -555,7 +552,7 @@ public class GUI extends JFrame {
                     return;
                 absorptionFile.setFilePath(file.getAbsolutePath());
 
-                ArrayList<DataFile> sourceFiles = new ArrayList<>();
+                ArrayList<DataFile> sourceFiles = new ArrayList<>(); // For writing txt file
                 DataFile i0 = (DataFile) absorptioni0List.getSelectedValue();
                 DataFile it = (DataFile) absorptionitList.getSelectedValue();
                 sourceFiles.add(i0); sourceFiles.add(it);
@@ -649,9 +646,8 @@ public class GUI extends JFrame {
 
             ArrayList<DataFile> correctedFiles = new ArrayList<>();
             File fileName = popUpMaker.saveDialogue();
-            System.out.println(fileName);
             File saveDir = fileName.getParentFile();
-            //File saveDir = popUpMaker.directoryChooser(); TODO decide which is better
+            //File saveDir = popUpMaker.directoryChooser(); TODO decide which implementation is better
             String savePath;
             try {
                 savePath = saveDir.getAbsolutePath();
@@ -680,13 +676,13 @@ public class GUI extends JFrame {
                     double absorption = sample.getAbsorption();
                     double i0 = sample.getI0();
                     double it = sample.getIt();
-                    double i0Corr = sample.getI0Corrected();
-                    double itCorr = sample.getItCorrected();
+                    double i0b = sample.getI0b();
+                    double itb = sample.getItb();
 
                     hasBackground = sample.hasBackground();
                     ProcessedSample copySample;
                     if (hasBackground) {
-                        copySample = new ProcessedSample(energy, theta, counts, absorption, i0, it, i0Corr, itCorr);
+                        copySample = new ProcessedSample(energy, theta, counts, absorption, i0, it, i0b, itb);
                     }
                     else {
                         copySample = new ProcessedSample(energy, theta, counts, absorption, i0, it);
@@ -703,7 +699,8 @@ public class GUI extends JFrame {
                 try {
                     if (hasBackground) {
                         fileWriter.writeDataFile(correctedFile, DataType.ENERGY, DataType.THETA, DataType.COUNTS_PER_LIVE,
-                                DataType.ABSORPTION, DataType.I0, DataType.IT, DataType.I0CORRECTED, DataType.ITCORRECTED,  DataType.ENERGY_CORRECTED, DataType.THETA_CORRECTED);
+                                DataType.ABSORPTION, DataType.I0, DataType.IT, DataType.I0CORRECTED, DataType.ITCORRECTED,
+                                DataType.I0B, DataType.ITB, DataType.ENERGY_CORRECTED, DataType.THETA_CORRECTED);
                     }
                     else {
                         fileWriter.writeDataFile(correctedFile, DataType.ENERGY, DataType.THETA, DataType.COUNTS_PER_LIVE,
